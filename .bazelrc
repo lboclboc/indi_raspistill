@@ -1,0 +1,13 @@
+build:rpi --crosstool_top=@rpi_bazel//tools/cc_toolchain:toolchain
+test:rpi --crosstool_top=@rpi_bazel//tools/cc_toolchain:toolchain
+
+build:rpi --cpu=armeabihf
+test:rpi --cpu=armeabihf
+
+build:rpi --compiler=clang
+test:rpi --compiler=clang
+
+build --copt='-I/usr/include/x86_64-linux-gnu/qt5'
+build --copt='-I/usr/include/x86_64-linux-gnu/qt5/QtCore'
+build --copt='-I/usr/include/x86_64-linux-gnu/qt5/QtGui'
+build --copt='-I/usr/include/x86_64-linux-gnu/qt5/QtWidgets'
