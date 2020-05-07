@@ -1,3 +1,6 @@
+/**
+ * INDI driver for Raspberry Pi 12Mp High Quality camera.
+ */
 #include <string.h>
 
 #include "mmaldriver.h"
@@ -10,26 +13,29 @@ MMALDriver::MMALDriver()
 MMALDriver::~MMALDriver()
 {
 }
+
 /**************************************************************************************
-** Client is asking us to establish connection to the device
-***************************************************************************************/
+ * Client is asking us to establish connection to the device
+ **************************************************************************************/
 bool MMALDriver::Connect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device connected successfully!");
     SetTimer(POLLMS);
     return true;
 }
+
 /**************************************************************************************
-** Client is asking us to terminate connection to the device
-***************************************************************************************/
+ * Client is asking us to terminate connection to the device
+ **************************************************************************************/
 bool MMALDriver::Disconnect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device disconnected successfully!");
     return true;
 }
+
 /**************************************************************************************
-** INDI is asking us for our default device name
-***************************************************************************************/
+ * INDI is asking us for our default device name
+ **************************************************************************************/
 const char * MMALDriver::getDefaultName()
 {
     return "MMAL Device";
@@ -67,8 +73,6 @@ bool MMALDriver::updateProperties()
 	// If we are connected, we define the property to the client.
 	if (isConnected())
 	{
-
-
 		// Let's get parameters now from CCD
 	    // Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
 	    SetCCDParams(4054, 3040, 12, 1.55, 1.55);
@@ -110,8 +114,8 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
 }
 
 /**************************************************************************************
-** Client is asking us to start an exposure
-***************************************************************************************/
+ * Client is asking us to start an exposure
+ **************************************************************************************/
 bool MMALDriver::StartExposure(float duration)
 {
     ExposureRequest = duration;
@@ -129,8 +133,8 @@ bool MMALDriver::StartExposure(float duration)
 
 
 /**************************************************************************************
-** Client is asking us to abort an exposure
-***************************************************************************************/
+ * Client is asking us to abort an exposure
+ **************************************************************************************/
 bool MMALDriver::AbortExposure()
 {
     InExposure = false;
@@ -139,8 +143,8 @@ bool MMALDriver::AbortExposure()
 }
 
 /**************************************************************************************
-** How much longer until exposure is done?
-***************************************************************************************/
+ * How much longer until exposure is done?
+ **************************************************************************************/
 float MMALDriver::CalcTimeLeft()
 {
     double timesince;
@@ -157,8 +161,8 @@ float MMALDriver::CalcTimeLeft()
 }
 
 /**************************************************************************************
-** Main device loop. We check for exposure
-***************************************************************************************/
+ * Main device loop. We check for exposure
+ **************************************************************************************/
 void MMALDriver::TimerHit()
 {
     long timeleft;
@@ -194,10 +198,9 @@ void MMALDriver::TimerHit()
     SetTimer(POLLMS);
 }
 
-
 /**************************************************************************************
-** Create a random image and return it to client
-***************************************************************************************/
+ * Create a random image and return it to client
+ **************************************************************************************/
 void MMALDriver::grabImage()
 {
     // Let's get a pointer to the frame buffer
