@@ -8,13 +8,6 @@ load("@rpi_bazel//tools/workspace:default.bzl", rpi_bazel_add = "add_default_rep
 
 rpi_bazel_add()
 
-http_archive(
-  name = "abyz_me_uk_pigpio",
-  urls = ["http://abyz.me.uk/rpi/pigpio/pigpio.zip"],
-  sha256 = "9b58a920f2746303123f6d47810d4c80dda035478f3bbb39a7061166530867d5",
-  build_file = "@//:abyz_me_uk_pigpio.BUILD",
-)
-
 
 http_archive(
     name = "googletest",

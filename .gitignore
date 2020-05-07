@@ -7,3 +7,5 @@ libgpiod-dev
 .~lock.*
 *.o
 test/MockHardware.h
+/build/
+/Debug/

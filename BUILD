@@ -5,7 +5,7 @@ config_setting(
 
 cc_library(
     name = "indi_mmal_lib",
-    srcs = glob(["src/*.cpp", "include/*.h",]),
+    srcs = glob(["src/*.cpp", "src/*.h",]),
     includes = ["include"],
     linkstatic = True,
 )
@@ -19,7 +19,7 @@ cc_binary(
         }),
 
     deps = ["//:indi_mmal_lib"] + select({
-            ":pi_build": ["@org_llvm_libcxx//:libcxx", "@abyz_me_uk_pigpio//:pigpio"],
+            ":pi_build": ["@org_llvm_libcxx//:libcxx"],
             "//conditions:default": [],
         }),
 
