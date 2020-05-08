@@ -41,10 +41,19 @@ const char * MMALDriver::getDefaultName()
     return "MMAL Device";
 }
 
+void MMALDriver::ISGetProperties(const char * dev)
+{
+    if (dev != nullptr && strcmp(getDeviceName(), dev) != 0)
+        return;
+
+    INDI::CCD::ISGetProperties(dev);
+}
 bool MMALDriver::initProperties()
 {
     // We must ALWAYS init the properties of the parent class first
     CCD::initProperties();
+
+    addDebugControl();
 
     SetCCDCapability(0
 		| CCD_CAN_BIN			// Does the CCD support binning?
@@ -68,7 +77,7 @@ bool MMALDriver::initProperties()
 bool MMALDriver::updateProperties()
 {
 	// We must ALWAYS call the parent class updateProperties() first
-	DefaultDevice::updateProperties();
+	CCD::updateProperties();
 
 	// If we are connected, we define the property to the client.
 	if (isConnected())
@@ -82,6 +91,15 @@ bool MMALDriver::updateProperties()
 	}
 
 	return true;
+}
+
+// FIXME: doc
+bool MMALDriver::UpdateCCDBin(int hor, int ver)
+{
+	// FIXME: implement UpdateCCDBin
+    LOGF_DEBUG("%s: UpdateCCDBin(%d, %d)", __FUNCTION__, hor, ver);
+
+    return true;
 }
 
 /**************************************************************************************
@@ -118,6 +136,8 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
  **************************************************************************************/
 bool MMALDriver::StartExposure(float duration)
 {
+	LOGF_DEBUG("StartEposure(%f)", duration);
+
     ExposureRequest = duration;
 
     // Since we have only have one CCD with one chip, we set the exposure duration of the primary CCD
@@ -137,6 +157,7 @@ bool MMALDriver::StartExposure(float duration)
  **************************************************************************************/
 bool MMALDriver::AbortExposure()
 {
+	LOGF_DEBUG("AbortEposure()", 0);
     InExposure = false;
     // FIXME: Needs to be handled.
     return true;
@@ -167,8 +188,9 @@ void MMALDriver::TimerHit()
 {
     long timeleft;
 
-    if (!isConnected())
+    if (!isConnected()) {
         return; //  No need to reset timer if we are not connected anymore
+    }
 
     if (InExposure)
     {
@@ -188,6 +210,7 @@ void MMALDriver::TimerHit()
             InExposure = false;
 
             /* grab and save image */
+            implement this one
             grabImage();
         }
         else
@@ -223,5 +246,21 @@ void MMALDriver::grabImage()
 
 bool MMALDriver::ISNewSwitch(const char * dev, const char * name, ISState * states, char * names[], int n)
 {
+    LOGF_DEBUG("%s: dev=%s, name=%s", __FUNCTION__, dev, name);
+
 	return INDI::CCD::ISNewSwitch(dev, name, states, names, n);
+}
+
+bool MMALDriver::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
+{
+    LOGF_DEBUG("%s: dev=%s, name=%s", __FUNCTION__, dev, name);
+
+    return INDI::CCD::ISNewNumber(dev, name, values, names, n);
+}
+
+bool MMALDriver::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
+{
+    LOGF_DEBUG("%s: dev=%s, name=%s", __FUNCTION__, dev, name);
+
+    return INDI::CCD::ISNewText(dev, name, texts, names, n);
 }
