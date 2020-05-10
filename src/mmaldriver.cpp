@@ -68,8 +68,9 @@ bool MMALDriver::initProperties()
 	//	| CCD_HAS_WEB_SOCKET 	// Does the CCD support web socket transfers?
 	);
 
-
     setDefaultPollingPeriod(500);
+
+    PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 1, 10000, 1, false);
 
     return true;
 }
@@ -84,7 +85,7 @@ bool MMALDriver::updateProperties()
 	{
 		// Let's get parameters now from CCD
 	    // Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
-	    SetCCDParams(4054, 3040, 12, 1.55, 1.55);
+	    SetCCDParams(4054, 3040, 16, 1.55, 1.55);
 
 		// Start the timer
 		SetTimer(POLLMS);
@@ -147,7 +148,7 @@ bool MMALDriver::StartExposure(float duration)
 
     InExposure = true;
 
-    // We're done
+    // Return true for this will take some time.
     return true;
 }
 
@@ -210,7 +211,6 @@ void MMALDriver::TimerHit()
             InExposure = false;
 
             /* grab and save image */
-            implement this one
             grabImage();
         }
         else

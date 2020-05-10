@@ -5,4 +5,5 @@ Just started hacking.
 
 References
 ----------
-- [MMAL API](https://picamera.readthedocs.io/en/release-1.13/api_mmalobj.html) - API for the camera interface.
+- [MMAL Camera API](http://www.jvcref.com/files/PI/documentation/html/)
+- [IMX477 Product Information](https://www.sony-semicon.co.jp/products/common/pdf/IMX477-AACK_Flyer.pdf)

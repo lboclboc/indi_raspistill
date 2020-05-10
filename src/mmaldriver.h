@@ -23,13 +23,11 @@ protected:
     // CCD specific functions
     virtual bool StartExposure(float duration) override;
     virtual bool AbortExposure() override;
-    void TimerHit();
     virtual bool UpdateCCDFrame(int x, int y, int w, int h) override;
     virtual bool UpdateCCDBin(int hor, int ver) override;
-
+    void TimerHit();
 
 private:
-
   // Utility functions
   float CalcTimeLeft();
   void setupParams();
