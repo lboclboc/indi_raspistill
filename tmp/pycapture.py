@@ -1,115 +1,101 @@
-import logging
-import PyIndi
-import cStringIO
-import pyfits
-import cv2
-from datetime import datetime
-from threading import Thread
+#!/usr/bin/env python3
 
+import sys, time, logging
+import PyIndi
+
+DEVICE_NAME = "MMAL Device"
+#DEVICE_NAME = "CCD Simulator"
 
 class IndiClient(PyIndi.BaseClient):
-    roi = None
-    device = None
-    run = True
-    gain = 15.0
-    exposure_time = 30.0
-
     def __init__(self):
         super(IndiClient, self).__init__()
+        self.exposure = None
+        self.device = None
+        self.done = False
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
         self.logger.info('creating an instance of PyQtIndi.IndiClient')
 
-    def disconnectServer(self):
-        return PyIndi.BaseClient.disconnectServer(self)
-        self.run = False 
-
     def newDevice(self, d):
-        self.logger.info("new device " + d.getDeviceName())
-        self.device = d
+        self.logger.info ("new Device '%s'" % d.getDeviceName())
+        if d.getDeviceName() == DEVICE_NAME:
+            self.logger.info("Set new device %s!" % DEVICE_NAME)
+            # save reference to the device in member variable
+            self.device = d
 
     def newProperty(self, p):
-        self.logger.info("new property "+ p.getName() + " for device "+ p.getDeviceName())
-        if p.getName() == "CONNECTION":
-            self.connectDevice(self.device.getDeviceName())
-        if p.getName() == "CCD_EXPOSURE":
-            self.takeExposure()
-        if p.getName() == "CCD_GAIN":
-            gain = self.device.getNumber("CCD_GAIN")
-            gain[0].value = self.gain
-            self.sendNewNumber(gain)
+        self.logger.info("%s: newProperty(%s)=%s(%s)" % (p.getDeviceName(), p.getName(), p.getNumber(), p.getType()))
+        if self.device is not None and p.getDeviceName() == self.device.getDeviceName():
+            if p.getName() == "CONNECTION":
+                self.logger.info("Got property CONNECTION for %s!" % DEVICE_NAME)
+                # connect to device
+                self.connectDevice(self.device.getDeviceName())
+                # set BLOB mode to BLOB_ALSO
+                self.setBLOBMode(1, self.device.getDeviceName(), None)
+
+            elif p.getName() == "CCD_EXPOSURE":
+                self.exposure = self.device.getNumber("CCD_EXPOSURE")
 
     def removeProperty(self, p):
-        self.logger.info("remove property "+ p.getName() + " for device "+ p.getDeviceName())
+        self.logger.info("%s: removeProperty(%s)=%s(%s)" % (p.getDeviceName(), p.getName(), p.getNumber(), p.getType()))
 
     def newBLOB(self, bp):
-        self.logger.info("new BLOB ")
+        self.logger.info("new BLOB "+ bp.name)
+        # get image data
         img = bp.getblobdata()
-        ### process data in new Thread
-        Thread(target=self.process_image, args=(img,)).start()
-        if self.run:
-            self.takeExposure()
+        # open a file and save buffer to disk
+        with open("frame.fit", "wb") as f:
+            f.write(img)
+        self.done = True
 
     def newSwitch(self, svp):
-        self.logger.info ("new Switch "+ svp.name.decode() + " for device "+ svp.device.decode())
+        self.logger.info ("new Switch "+ svp.name + " for device "+ svp.device)
 
     def newNumber(self, nvp):
-        self.logger.info("new Number "+ nvp.name.decode() + " for device "+ nvp.device.decode())
-        print nvp[0].value
+        self.logger.info("new Number "+ nvp.name + " for device "+ nvp.device + ", value " + str(nvp.np.value))
 
     def newText(self, tvp):
-        self.logger.info("new Text "+ tvp.name.decode() + " for device "+ tvp.device.decode())
+        self.logger.info("new Text "+ tvp.name + " for device "+ tvp.device)
 
     def newLight(self, lvp):
-        self.logger.info("new Light "+ lvp.name.decode() + " for device "+ lvp.device.decode())
+        self.logger.info("new Light "+ lvp.name + " for device "+ lvp.device)
 
     def newMessage(self, d, m):
-        #self.logger.info("new Message "+ m)
-        self.logger.info("New Message")
-        print "MESSAGE", m
+        self.logger.info("newMessage(%s)=%s" % (d.getDeviceName(), d.messageQueue(m)))
 
     def serverConnected(self):
-        self.logger.info("Server connected ("+self.getHost()+":"+str(self.getPort())+")")
+        print("Server connected ("+self.getHost()+":"+str(self.getPort())+")")
+        self.connected = True
 
     def serverDisconnected(self, code):
         self.logger.info("Server disconnected (exit code = "+str(code)+","+str(self.getHost())+":"+str(self.getPort())+")")
+        # set connected to False
+        self.connected = False
 
     def takeExposure(self):
         self.logger.info("<<<<<<<< Exposure >>>>>>>>>")
-        exp = self.device.getNumber("CCD_EXPOSURE")
-        exp[0].value = self.exposure_time
-        self.sendNewNumber(exp)
+        #get current exposure time
+        # set exposure time to 5 seconds
+        self.exposure[0].value = 2
+        # send new exposure time to server/device
+        self.sendNewNumber(self.exposure)
 
-    def process_image(self, imgdata):
-        blobfile=cStringIO.StringIO(imgdata)
-        hdulist=pyfits.open(blobfile)
-        scidata = hdulist[0].data
-        if self.roi is not None:
-            scidata = scidata[self.roi[1]:self.roi[1]+self.roi[3], self.roi[0]:self.roi[0]+self.roi[2]]
-        hdulist[0].data = scidata
-        hdulist.writeto("%s.fit" % datetime.now())
-        cv2.imwrite("%s.png" % datetime.now() , scidata)
-        cv2.imwrite("%s.jpg" % datetime.now() , scidata)
-        
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
-DEVICE = 'QHY CCD QHY5-0-M-'
-
 if __name__ == '__main__':
-    indiclient=IndiClient()
-    indiclient.roi = (270, 200, 700, 700) # region of interest for my allsky cam
+    # Connect to indi-server
+    indiclient = IndiClient()
     indiclient.setServer("localhost", 7624)
-    indiclient.watchDevice(DEVICE)
-
     if (not(indiclient.connectServer())):
-        print("No indiserver running on "+indiclient.getHost()+":"+str(indiclient.getPort())+" - Try to run")
-        print("  indiserver indi_simulator_telescope indi_simulator_ccd")
-        sys.exit(1)
+         print("No indiserver running on " + indiclient.getHost() + ":" + str(indiclient.getPort()) + " - Try to run")
+         print("  indiserver indi_simulator_telescope indi_simulator_ccd")
+         sys.exit(1)
 
-    time.sleep(2)
-    indiclient.setBLOBMode(1, DEVICE, None)
+    while indiclient.exposure is None:
+        time.sleep(1)
 
-    while True:
-        pass
+    print("Taking picture")
+    indiclient.takeExposure()
+    while not indiclient.done:
+        time.sleep(1)
 
-    print("Disconnecting")
     indiclient.disconnectServer()

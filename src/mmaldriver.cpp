@@ -5,6 +5,9 @@
 
 #include "mmaldriver.h"
 
+
+Få till debugging av childprocess från indiserver.
+
 MMALDriver::MMALDriver()
 {
     setVersion(1, 0);
@@ -48,6 +51,7 @@ void MMALDriver::ISGetProperties(const char * dev)
 
     INDI::CCD::ISGetProperties(dev);
 }
+
 bool MMALDriver::initProperties()
 {
     // We must ALWAYS init the properties of the parent class first
@@ -85,7 +89,7 @@ bool MMALDriver::updateProperties()
 	{
 		// Let's get parameters now from CCD
 	    // Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
-	    SetCCDParams(4054, 3040, 16, 1.55, 1.55);
+	    SetCCDParams(4056, 3040, 16, 1.55, 1.55);
 
 		// Start the timer
 		SetTimer(POLLMS);
@@ -179,6 +183,11 @@ float MMALDriver::CalcTimeLeft()
     timesince = timesince / 1000;
 
     timeleft = ExposureRequest - timesince;
+
+    if (timeleft < 0) {
+        timeleft = 0;
+    }
+
     return timeleft;
 }
 
@@ -187,7 +196,7 @@ float MMALDriver::CalcTimeLeft()
  **************************************************************************************/
 void MMALDriver::TimerHit()
 {
-    long timeleft;
+    uint32_t nextTimer = POLLMS;
 
     if (!isConnected()) {
         return; //  No need to reset timer if we are not connected anymore
@@ -195,30 +204,36 @@ void MMALDriver::TimerHit()
 
     if (InExposure)
     {
-        timeleft = CalcTimeLeft();
+        float timeleft = CalcTimeLeft();
+        if (timeleft < 0)
+            timeleft = 0;
 
-        // Less than a 0.1 second away from exposure completion
-        // This is an over simplified timing method, check CCDSimulator and simpleCCD for better timing checks
-        if (timeleft < 0.1)
-        {
-            /* We're done exposing */
-            IDMessage(getDeviceName(), "Exposure done, downloading image...");
+        // Just update time left in client
+        PrimaryCCD.setExposureLeft(timeleft);
 
-            // Set exposure left to zero
-            PrimaryCCD.setExposureLeft(0);
+        // Less than a 1 second away from exposure completion, use shorter timer. If less than 1m, take the image.
+        if (timeleft < 1.0) {
 
-            // We're no longer exposing...
-            InExposure = false;
+            if (timeleft < 0.001) {
+				/* We're done exposing */
+				IDMessage(getDeviceName(), "Exposure done, downloading image...");
 
-            /* grab and save image */
-            grabImage();
+				// Set exposure left to zero
+				PrimaryCCD.setExposureLeft(0);
+
+				// We're no longer exposing...
+				InExposure = false;
+
+				/* grab and save image */
+				grabImage();
+            }
+            else {
+                nextTimer = timeleft * 1000;
+            }
         }
-        else
-            // Just update time left in client
-            PrimaryCCD.setExposureLeft(timeleft);
     }
 
-    SetTimer(POLLMS);
+    SetTimer(nextTimer);
 }
 
 /**************************************************************************************
@@ -237,6 +252,8 @@ void MMALDriver::grabImage()
     for (int i = 0; i < height; i++)
         for (int j = 0; j < width; j++)
             image[i * width + j] = rand() % 255;
+
+    PrimaryCCD.binFrame();
 
     IDMessage(getDeviceName(), "Download complete.");
 

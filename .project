@@ -3,6 +3,7 @@
 	<name>indi_mmal</name>
 	<comment></comment>
 	<projects>
+		<project>indi</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
