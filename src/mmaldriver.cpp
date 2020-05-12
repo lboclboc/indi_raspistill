@@ -5,9 +5,6 @@
 
 #include "mmaldriver.h"
 
-
-Få till debugging av childprocess från indiserver.
-
 MMALDriver::MMALDriver()
 {
     setVersion(1, 0);
@@ -84,16 +81,12 @@ bool MMALDriver::updateProperties()
 	// We must ALWAYS call the parent class updateProperties() first
 	CCD::updateProperties();
 
-	// If we are connected, we define the property to the client.
-	if (isConnected())
-	{
-		// Let's get parameters now from CCD
-	    // Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
-	    SetCCDParams(4056, 3040, 16, 1.55, 1.55);
 
-		// Start the timer
-		SetTimer(POLLMS);
-	}
+	// Let's get parameters now from CCD
+	// Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
+	SetCCDParams(4056, 3040, 16, 1.55, 1.55);
+
+	updateFrameBufferSize();
 
 	return true;
 }
@@ -245,7 +238,7 @@ void MMALDriver::grabImage()
     uint8_t *image = PrimaryCCD.getFrameBuffer();
 
     // Get width and height
-    int width  = PrimaryCCD.getSubW() / PrimaryCCD.getBinX() * PrimaryCCD.getBPP() / 8;
+    int width  = (PrimaryCCD.getSubW() / PrimaryCCD.getBinX() * PrimaryCCD.getBPP() + 7)/ 8;
     int height = PrimaryCCD.getSubH() / PrimaryCCD.getBinY();
 
     // Fill buffer with random pattern
@@ -264,6 +257,8 @@ void MMALDriver::grabImage()
 bool MMALDriver::ISNewSwitch(const char * dev, const char * name, ISState * states, char * names[], int n)
 {
     LOGF_DEBUG("%s: dev=%s, name=%s", __FUNCTION__, dev, name);
+
+    // FIXME: When implementing variables here, make sure to call void MMALDriver::updateFrameBufferSize()
 
 	return INDI::CCD::ISNewSwitch(dev, name, states, names, n);
 }
