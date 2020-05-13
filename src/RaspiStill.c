@@ -1,4 +1,4 @@
-#include "RaspiStill.h"
+#include "RaspiStill-fixed.c"
 
 /**
  * main

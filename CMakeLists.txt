@@ -33,7 +33,6 @@ set_property(TARGET raspilib PROPERTY IMPORTED_OBJECTS
     ${RASPISTILL_OBJS}/RaspiGPS.c.o
     ${RASPISTILL_OBJS}/RaspiHelpers.c.o
     ${RASPISTILL_OBJS}/RaspiPreview.c.o
-    ${RASPISTILL_OBJS}/RaspiStill.c.o
     ${RASPISTILL_OBJS}/RaspiTex.c.o
     ${RASPISTILL_OBJS}/RaspiTexUtil.c.o
     ${RASPISTILL_OBJS}/tga.c.o
@@ -47,26 +46,31 @@ set_property(TARGET raspilib PROPERTY IMPORTED_OBJECTS
 )
 
 add_library(libuserland OBJECT IMPORTED GLOBAL)
-set_property( TARGET libuserland PROPERTY IMPORTED_OBJECTS 
-    ${USERLAND_LIB}/libvcos.so;${USERLAND_LIB}/libbcm_host.so;${USERLAND_LIB}/libmmal_core.so;${USERLAND_LIB}/libmmal_util.so;${USERLAND_LIB}/libbrcmGLESv2.so;${USERLAND_LIB}/libbrcmEGL.so;${USERLAND_LIB}/libvcsm.so
+set_property(TARGET libuserland PROPERTY IMPORTED_OBJECTS 
+    ${USERLAND_LIB}/libvcos.so
+    ${USERLAND_LIB}/libbcm_host.so
+    ${USERLAND_LIB}/libmmal_core.so
+    ${USERLAND_LIB}/libmmal_util.so
+    ${USERLAND_LIB}/libbrcmGLESv2.so
+    ${USERLAND_LIB}/libbrcmEGL.so
+    ${USERLAND_LIB}/libvcsm.so
 )
 
 set(indi_raspistill_SRCS
    ${CMAKE_SOURCE_DIR}/src/RaspiStill.c
    ${CMAKE_SOURCE_DIR}/src/indi_mmal.cpp
    ${CMAKE_SOURCE_DIR}/src/mmaldriver.cpp
-   )
+)
 
 set(USERLAND_LIBRARIES raspilib libuserland)
 
 ExternalProject_Add(userland
   GIT_REPOSITORY    https://github.com/raspberrypi/userland.git
   GIT_TAG           291f9cb826d51ac30c1114cdc165836eacd8db52
-  BUILD_COMMAND     ${CMAKE_COMMAND} -E echo "Starting build"
-  COMMAND           ${CMAKE_COMMAND} --build <BINARY_DIR> --config --target raspistill
-  COMMAND           ${CMAKE_COMMAND} -E echo "$<CONFIG> build complete"
-
-  PATCH_COMMAND     grep "^static " ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill.c && sed -i "/^static.*(/s/static //" ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill.c && ${CMAKE_COMMAND} -E echo "Patched RaspiStill.c"
+  BUILD_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --config --target raspistill
+  PATCH_COMMAND     ${PROJECT_SOURCE_DIR}/scripts/patch_raspistill.sh ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill.c
+                        ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill-fixed.c &&
+                    ${CMAKE_COMMAND} -E echo "Patched RaspiStill.c"
   INSTALL_COMMAND ""
 )
 
