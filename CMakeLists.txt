@@ -4,11 +4,13 @@ PROJECT(indi_raspistill CXX C)
 include(ExternalProject)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 set(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin")
 set(RULES_INSTALL_DIR "/etc/udev/rules.d")
 set(USERLAND_SRC "${PROJECT_SOURCE_DIR}/build/userland-prefix/src/userland")
 set(USERLAND_LIB "${PROJECT_SOURCE_DIR}/build/userland-prefix/src/userland/build/lib")
 set(RASPISTILL_OBJS "${PROJECT_SOURCE_DIR}/build/userland-prefix/src/userland-build/host_applications/linux/apps/raspicam/CMakeFiles/raspistill.dir")
+
 
 find_package(CFITSIO REQUIRED)
 find_package(INDI REQUIRED)
@@ -51,6 +53,7 @@ set_property(TARGET libuserland PROPERTY IMPORTED_OBJECTS
     ${USERLAND_LIB}/libbcm_host.so
     ${USERLAND_LIB}/libmmal_core.so
     ${USERLAND_LIB}/libmmal_util.so
+    ${USERLAND_LIB}/libmmal_vc_client.so
     ${USERLAND_LIB}/libbrcmGLESv2.so
     ${USERLAND_LIB}/libbrcmEGL.so
     ${USERLAND_LIB}/libvcsm.so
