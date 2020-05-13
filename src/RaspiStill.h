@@ -208,9 +208,6 @@ static struct
 static int next_frame_description_size = sizeof(next_frame_description) / sizeof(next_frame_description[0]);
 
 
-extern int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
-extern int encoding_xref_size = sizeof(encoding_xref) / sizeof(encoding_xref[0]);
-extern int next_frame_description_size = sizeof(next_frame_description) / sizeof(next_frame_description[0]);
 extern int parse_cmdline(int argc, const char **argv, RASPISTILL_STATE *state);
 extern int wait_for_next_frame(RASPISTILL_STATE *state, int *frame);
 extern MMAL_STATUS_T add_exif_tag(RASPISTILL_STATE *state, const char *exif_tag);
