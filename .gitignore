@@ -1,11 +1,5 @@
-bazel-indi_mmal
-bazel-bin
-bazel-out
-bazel-testlogs
-lab
-libgpiod-dev
 .~lock.*
 *.o
-test/MockHardware.h
 /build/
 /Debug/
+/tmp/
