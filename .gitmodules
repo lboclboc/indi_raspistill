@@ -1,3 +1,6 @@
 [submodule "userland"]
 	path = userland
 	url = https://github.com/raspberrypi/userland.git
+[submodule "indi"]
+	path = indi
+	url = https://github.com/indilib/indi.git
