@@ -1,1 +1,4 @@
-Function main -> get_sensor_defaults -> mmal_component_create returns error
+Function main -> get_sensor_defaults -> mmal_component_create returns error:
+
+main -> get_sensor_defaults -> mmal_component_create -> mmal_component_create_core -> *mmal_component_supplier_create
+        The list of suppliers is null
