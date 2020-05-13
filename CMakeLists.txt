@@ -65,9 +65,10 @@ set(indi_raspistill_SRCS
 set(USERLAND_LIBRARIES raspilib libuserland)
 
 ExternalProject_Add(userland
+  CMAKE_ARGS        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   GIT_REPOSITORY    https://github.com/raspberrypi/userland.git
   GIT_TAG           291f9cb826d51ac30c1114cdc165836eacd8db52
-  BUILD_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --config --target raspistill
+  BUILD_COMMAND     ${CMAKE_COMMAND} --build <BINARY_DIR> --target raspistill
   PATCH_COMMAND     ${PROJECT_SOURCE_DIR}/scripts/patch_raspistill.sh ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill.c
                         ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill-fixed.c &&
                     ${CMAKE_COMMAND} -E echo "Patched RaspiStill.c"
