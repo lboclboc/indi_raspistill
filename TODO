@@ -1,0 +1,1 @@
+Function main -> get_sensor_defaults -> mmal_component_create returns error
