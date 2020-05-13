@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.8.2, 2020-05-13T23:38:54. -->
+<!-- Written by QtCreator 4.8.2, 2020-05-13T23:42:59. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -343,7 +343,7 @@
     </valuelist>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes">
-     <value type="QString">LD_LIBRARY_PATH=%{CurrentProject:BuildPath}/userland-prefix/src/userland/build/lib</value>
+     <value type="QString">LD_LIBRARY_PATH=userland-prefix/src/userland/build/lib</value>
     </valuelist>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">indi_raspistill</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
