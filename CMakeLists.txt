@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.4.7)
 PROJECT(indi_raspistill CXX C)
 
+include(ExternalProject)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 set(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin")
 set(RULES_INSTALL_DIR "/etc/udev/rules.d")
@@ -25,6 +27,10 @@ set(indi_raspistill_SRCS
    ${RASPISTILL_DIR}/RaspiStill.c
    )
 
+ExternalProject_Add(userland
+  GIT_REPOSITORY    https://github.com/raspberrypi/userland.git
+)
+
 add_executable(indi_raspistill ${indi_raspistill_SRCS})
 
 target_link_libraries(indi_raspistill ${INDI_DRIVER_LIBRARIES} ${CFITSIO_LIBRARIES} ${INDI_LIBRARIES} Threads::Threads )
@@ -33,4 +39,5 @@ install(TARGETS indi_raspistill RUNTIME DESTINATION bin )
 
 #install(FILES indi_qsi.xml DESTINATION ${INDI_DATA_DIR})
 #install(FILES 99-qsi.rules DESTINATION ${RULES_INSTALL_DIR})
+
 
