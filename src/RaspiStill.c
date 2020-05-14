@@ -2,28 +2,312 @@
 
 RASPISTILL_STATE state;
 
-static void my_default_status(RASPISTILL_STATE *state)
+/**
+ *  buffer header callback function for encoder
+ *
+ *  Callback will dump buffer data to the specific file
+ *
+ * @param port Pointer to port from which callback originated
+ * @param buffer mmal buffer header pointer
+ */
+static void my_encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
+   int complete = 0;
 
-    raspicommonsettings_set_defaults(&state->common_settings);
+   // We pass our file handle and other stuff in via the userdata field.
 
-    state->timeout = -1; // replaced with 5000ms later if unset
-    state->quality = 85;
-    state->thumbnailConfig.enable = 1;
-    state->thumbnailConfig.width = 64;
-    state->thumbnailConfig.height = 48;
-    state->thumbnailConfig.quality = 35;
-    state->demoInterval = 250; // ms
-    state->encoding = MMAL_ENCODING_JPEG;
-    state->numExifTags = 0;
-    state->enableExifTags = 1;
+   PORT_USERDATA *pData = (PORT_USERDATA *)port->userdata;
 
+   if (pData)
+   {
+      int bytes_written = buffer->length;
 
-    // Setup preview window defaults
-    raspipreview_set_defaults(&state->preview_parameters);
+      if (buffer->length && pData->file_handle)
+      {
+         mmal_buffer_header_mem_lock(buffer);
 
-    // Set up the camera_parameters to default
-    raspicamcontrol_set_defaults(&state->camera_parameters);
+         bytes_written = fwrite(buffer->data, 1, buffer->length, pData->file_handle);
+
+         mmal_buffer_header_mem_unlock(buffer);
+      }
+
+      // We need to check we wrote what we wanted - it's possible we have run out of storage.
+      if (bytes_written != buffer->length)
+      {
+         vcos_log_error("Unable to write buffer to file - aborting");
+         complete = 1;
+      }
+
+      // Now flag if we have completed
+      if (buffer->flags & (MMAL_BUFFER_HEADER_FLAG_FRAME_END | MMAL_BUFFER_HEADER_FLAG_TRANSMISSION_FAILED))
+         complete = 1;
+   }
+   else
+   {
+      vcos_log_error("Received a encoder buffer callback with no state");
+   }
+
+   // release buffer back to the pool
+   mmal_buffer_header_release(buffer);
+
+   // and send one back to the port (if still open)
+   if (port->is_enabled)
+   {
+      MMAL_STATUS_T status = MMAL_SUCCESS;
+      MMAL_BUFFER_HEADER_T *new_buffer;
+
+      new_buffer = mmal_queue_get(pData->pstate->encoder_pool->queue);
+
+      if (new_buffer)
+      {
+         status = mmal_port_send_buffer(port, new_buffer);
+      }
+      if (!new_buffer || status != MMAL_SUCCESS)
+         vcos_log_error("Unable to return a buffer to the encoder port");
+   }
+
+   if (complete)
+      vcos_semaphore_post(&(pData->complete_semaphore));
+}
+
+/**
+ * Create the camera component, set up its ports
+ *
+ * @param state Pointer to state control struct. camera_component member set to the created camera_component if successful.
+ *
+ * @return MMAL_SUCCESS if all OK, something else otherwise
+ *
+ */
+static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
+{
+   MMAL_COMPONENT_T *camera = 0;
+   MMAL_ES_FORMAT_T *format;
+   MMAL_PORT_T *preview_port = NULL, *video_port = NULL, *still_port = NULL;
+   MMAL_STATUS_T status;
+
+   /* Create the component */
+   status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera);
+
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("Failed to create camera component");
+      goto error;
+   }
+
+   status = raspicamcontrol_set_stereo_mode(camera->output[0], &state->camera_parameters.stereo_mode);
+   status += raspicamcontrol_set_stereo_mode(camera->output[1], &state->camera_parameters.stereo_mode);
+   status += raspicamcontrol_set_stereo_mode(camera->output[2], &state->camera_parameters.stereo_mode);
+
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("Could not set stereo mode : error %d", status);
+      goto error;
+   }
+
+   MMAL_PARAMETER_INT32_T camera_num = {{MMAL_PARAMETER_CAMERA_NUM, sizeof(camera_num)}, state->common_settings.cameraNum};
+
+   status = mmal_port_parameter_set(camera->control, &camera_num.hdr);
+
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("Could not select camera : error %d", status);
+      goto error;
+   }
+
+   if (!camera->output_num)
+   {
+      status = MMAL_ENOSYS;
+      vcos_log_error("Camera doesn't have output ports");
+      goto error;
+   }
+
+   status = mmal_port_parameter_set_uint32(camera->control, MMAL_PARAMETER_CAMERA_CUSTOM_SENSOR_CONFIG, state->common_settings.sensor_mode);
+
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("Could not set sensor mode : error %d", status);
+      goto error;
+   }
+
+   preview_port = camera->output[MMAL_CAMERA_PREVIEW_PORT];
+   video_port = camera->output[MMAL_CAMERA_VIDEO_PORT];
+   still_port = camera->output[MMAL_CAMERA_CAPTURE_PORT];
+
+   // Enable the camera, and tell it its control callback function
+   status = mmal_port_enable(camera->control, default_camera_control_callback);
+
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("Unable to enable control port : error %d", status);
+      goto error;
+   }
+
+   //  set up the camera configuration
+   {
+      MMAL_PARAMETER_CAMERA_CONFIG_T cam_config =
+      {
+         { MMAL_PARAMETER_CAMERA_CONFIG, sizeof(cam_config) },
+         .max_stills_w = state->common_settings.width,
+         .max_stills_h = state->common_settings.height,
+         .stills_yuv422 = 0,
+         .one_shot_stills = 1,
+         .max_preview_video_w = state->preview_parameters.previewWindow.width,
+         .max_preview_video_h = state->preview_parameters.previewWindow.height,
+         .num_preview_video_frames = 3,
+         .stills_capture_circular_buffer_height = 0,
+         .fast_preview_resume = 0,
+         .use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RESET_STC
+      };
+
+      if (state->fullResPreview)
+      {
+         cam_config.max_preview_video_w = state->common_settings.width;
+         cam_config.max_preview_video_h = state->common_settings.height;
+      }
+
+      mmal_port_parameter_set(camera->control, &cam_config.hdr);
+   }
+
+   raspicamcontrol_set_all_parameters(camera, &state->camera_parameters);
+
+   // Now set up the port formats
+
+   format = preview_port->format;
+   format->encoding = MMAL_ENCODING_OPAQUE;
+   format->encoding_variant = MMAL_ENCODING_I420;
+
+   if(state->camera_parameters.shutter_speed > 6000000)
+   {
+      MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
+         { 5, 1000 }, {166, 1000}
+      };
+      mmal_port_parameter_set(preview_port, &fps_range.hdr);
+   }
+   else if(state->camera_parameters.shutter_speed > 1000000)
+   {
+      MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
+         { 166, 1000 }, {999, 1000}
+      };
+      mmal_port_parameter_set(preview_port, &fps_range.hdr);
+   }
+   if (state->fullResPreview)
+   {
+      // In this mode we are forcing the preview to be generated from the full capture resolution.
+      // This runs at a max of 15fps with the OV5647 sensor.
+      format->es->video.width = VCOS_ALIGN_UP(state->common_settings.width, 32);
+      format->es->video.height = VCOS_ALIGN_UP(state->common_settings.height, 16);
+      format->es->video.crop.x = 0;
+      format->es->video.crop.y = 0;
+      format->es->video.crop.width = state->common_settings.width;
+      format->es->video.crop.height = state->common_settings.height;
+      format->es->video.frame_rate.num = FULL_RES_PREVIEW_FRAME_RATE_NUM;
+      format->es->video.frame_rate.den = FULL_RES_PREVIEW_FRAME_RATE_DEN;
+   }
+   else
+   {
+      // Use a full FOV 4:3 mode
+      format->es->video.width = VCOS_ALIGN_UP(state->preview_parameters.previewWindow.width, 32);
+      format->es->video.height = VCOS_ALIGN_UP(state->preview_parameters.previewWindow.height, 16);
+      format->es->video.crop.x = 0;
+      format->es->video.crop.y = 0;
+      format->es->video.crop.width = state->preview_parameters.previewWindow.width;
+      format->es->video.crop.height = state->preview_parameters.previewWindow.height;
+      format->es->video.frame_rate.num = PREVIEW_FRAME_RATE_NUM;
+      format->es->video.frame_rate.den = PREVIEW_FRAME_RATE_DEN;
+   }
+
+   status = mmal_port_format_commit(preview_port);
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("camera viewfinder format couldn't be set");
+      goto error;
+   }
+
+   // Set the same format on the video  port (which we don't use here)
+   mmal_format_full_copy(video_port->format, format);
+   status = mmal_port_format_commit(video_port);
+
+   if (status  != MMAL_SUCCESS)
+   {
+      vcos_log_error("camera video format couldn't be set");
+      goto error;
+   }
+
+   // Ensure there are enough buffers to avoid dropping frames
+   if (video_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM)
+      video_port->buffer_num = VIDEO_OUTPUT_BUFFERS_NUM;
+
+   format = still_port->format;
+
+   if(state->camera_parameters.shutter_speed > 6000000)
+   {
+      MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
+         { 5, 1000 }, {166, 1000}
+      };
+      mmal_port_parameter_set(still_port, &fps_range.hdr);
+   }
+   else if(state->camera_parameters.shutter_speed > 1000000)
+   {
+      MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
+         { 167, 1000 }, {999, 1000}
+      };
+      mmal_port_parameter_set(still_port, &fps_range.hdr);
+   }
+   // Set our stills format on the stills (for encoder) port
+   format->encoding = MMAL_ENCODING_OPAQUE;
+   format->es->video.width = VCOS_ALIGN_UP(state->common_settings.width, 32);
+   format->es->video.height = VCOS_ALIGN_UP(state->common_settings.height, 16);
+   format->es->video.crop.x = 0;
+   format->es->video.crop.y = 0;
+   format->es->video.crop.width = state->common_settings.width;
+   format->es->video.crop.height = state->common_settings.height;
+   format->es->video.frame_rate.num = STILLS_FRAME_RATE_NUM;
+   format->es->video.frame_rate.den = STILLS_FRAME_RATE_DEN;
+
+   status = mmal_port_format_commit(still_port);
+
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("camera still format couldn't be set");
+      goto error;
+   }
+
+   /* Ensure there are enough buffers to avoid dropping frames */
+   if (still_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM)
+      still_port->buffer_num = VIDEO_OUTPUT_BUFFERS_NUM;
+
+   /* Enable component */
+   status = mmal_component_enable(camera);
+
+   if (status != MMAL_SUCCESS)
+   {
+      vcos_log_error("camera component couldn't be enabled");
+      goto error;
+   }
+
+   if (state->useGL)
+   {
+      status = raspitex_configure_preview_port(&state->raspitex_state, preview_port);
+      if (status != MMAL_SUCCESS)
+      {
+         fprintf(stderr, "Failed to configure preview port for GL rendering");
+         goto error;
+      }
+   }
+
+   state->camera_component = camera;
+
+   if (state->common_settings.verbose)
+      fprintf(stderr, "Camera component done\n");
+
+   return status;
+
+error:
+
+   if (camera)
+      mmal_component_destroy(camera);
+
+   return status;
 }
 
 /**
@@ -59,7 +343,9 @@ int main(int argc, const char **argv)
    signal(SIGUSR1, SIG_IGN);
    signal(SIGUSR2, SIG_IGN);
 
-   my_default_status(&state);
+   default_status(&state);
+   state.preview_parameters.wantPreview = 0;
+
 
    if (state.timeout == -1)
       state.timeout = 5000;
@@ -135,6 +421,7 @@ int main(int argc, const char **argv)
             char *final_filename = NULL;    // Name that file gets once writing complete
 
             frame = state.frameStart - 1;
+            state.frameNextMethod = FRAME_NEXT_IMMEDIATELY;
 
             while (keep_looping)
             {
@@ -235,7 +522,7 @@ int main(int argc, const char **argv)
                      fprintf(stderr, "Enabling encoder output port\n");
 
                   // Enable the encoder output port and tell it its callback function
-                  status = mmal_port_enable(encoder_output_port, encoder_buffer_callback);
+                  status = mmal_port_enable(encoder_output_port, my_encoder_buffer_callback);
 
                   // Send all the buffers to the encoder output port
                   num = mmal_queue_length(state.encoder_pool->queue);
