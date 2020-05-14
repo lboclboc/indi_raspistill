@@ -1,12 +1,38 @@
 #include "RaspiStill-fixed.c"
 
+RASPISTILL_STATE state;
+
+static void my_default_status(RASPISTILL_STATE *state)
+{
+
+    raspicommonsettings_set_defaults(&state->common_settings);
+
+    state->timeout = -1; // replaced with 5000ms later if unset
+    state->quality = 85;
+    state->thumbnailConfig.enable = 1;
+    state->thumbnailConfig.width = 64;
+    state->thumbnailConfig.height = 48;
+    state->thumbnailConfig.quality = 35;
+    state->demoInterval = 250; // ms
+    state->encoding = MMAL_ENCODING_JPEG;
+    state->numExifTags = 0;
+    state->enableExifTags = 1;
+
+
+    // Setup preview window defaults
+    raspipreview_set_defaults(&state->preview_parameters);
+
+    // Set up the camera_parameters to default
+    raspicamcontrol_set_defaults(&state->camera_parameters);
+}
+
 /**
  * main
  */
 int main(int argc, const char **argv)
 {
    // Our main data storage vessel..
-   RASPISTILL_STATE state;
+
    int exit_code = EX_OK;
 
    printf("FIXME: Hey this is my main\n");
@@ -19,6 +45,9 @@ int main(int argc, const char **argv)
    MMAL_PORT_T *encoder_input_port = NULL;
    MMAL_PORT_T *encoder_output_port = NULL;
 
+   char filename[] = "x.jpg";
+   state.wantRAW = true;
+
    bcm_host_init();
 
    // Register our application with the logging system
@@ -30,22 +59,7 @@ int main(int argc, const char **argv)
    signal(SIGUSR1, SIG_IGN);
    signal(SIGUSR2, SIG_IGN);
 
-   set_app_name(argv[0]);
-
-   // Do we have any parameters
-   if (argc == 1)
-   {
-      display_valid_parameters(basename(argv[0]), &application_help_message);
-      exit(EX_USAGE);
-   }
-
-   default_status(&state);
-
-   // Parse the command line and put options in to our status structure
-   if (parse_cmdline(argc, argv, &state))
-   {
-      exit(EX_USAGE);
-   }
+   my_default_status(&state);
 
    if (state.timeout == -1)
       state.timeout = 5000;
@@ -53,21 +67,6 @@ int main(int argc, const char **argv)
    // Setup for sensor specific parameters
    get_sensor_defaults(state.common_settings.cameraNum, state.common_settings.camera_name,
                        &state.common_settings.width, &state.common_settings.height);
-
-   if (state.common_settings.verbose)
-   {
-      print_app_details(stderr);
-      dump_status(&state);
-   }
-
-   if (state.common_settings.gps)
-   {
-      if (raspi_gps_setup(state.common_settings.verbose))
-         state.common_settings.gps = false;
-   }
-
-   if (state.useGL)
-      raspitex_init(&state.raspitex_state);
 
    // OK, we have a nice set of parameters. Now set up our components
    // We have three components. Camera, Preview and encoder.
@@ -105,19 +104,6 @@ int main(int argc, const char **argv)
       encoder_input_port  = state.encoder_component->input[0];
       encoder_output_port = state.encoder_component->output[0];
 
-      if (! state.useGL)
-      {
-         if (state.common_settings.verbose)
-            fprintf(stderr, "Connecting camera preview port to video render.\n");
-
-         // Note we are lucky that the preview and null sink components use the same input port
-         // so we can simple do this without conditionals
-         preview_input_port  = state.preview_parameters.preview_component->input[0];
-
-         // Connect camera to preview (which might be a null_sink if no preview required)
-         status = connect_ports(camera_preview_port, preview_input_port, &state.preview_connection);
-      }
-
       if (status == MMAL_SUCCESS)
       {
          VCOS_STATUS_T vcos_status;
@@ -142,28 +128,6 @@ int main(int argc, const char **argv)
 
          vcos_assert(vcos_status == VCOS_SUCCESS);
 
-         /* If GL preview is requested then start the GL threads */
-         if (state.useGL && (raspitex_start(&state.raspitex_state) != 0))
-            goto error;
-
-         if (status != MMAL_SUCCESS)
-         {
-            vcos_log_error("Failed to setup encoder output");
-            goto error;
-         }
-
-         if (state.demoMode)
-         {
-            // Run for the user specific time..
-            int num_iterations = state.timeout / state.demoInterval;
-            int i;
-            for (i=0; i<num_iterations; i++)
-            {
-               raspicamcontrol_cycle_test(state.camera_component);
-               vcos_sleep(state.demoInterval);
-            }
-         }
-         else
          {
             int frame, keep_looping = 1;
             FILE *output_file = NULL;
@@ -200,16 +164,16 @@ int main(int argc, const char **argv)
                }
 
                // Open the file
-               if (state.common_settings.filename)
+               if (filename)
                {
-                  if (state.common_settings.filename[0] == '-')
+                  if (filename[0] == '-')
                   {
                      output_file = stdout;
                   }
                   else
                   {
                      vcos_assert(use_filename == NULL && final_filename == NULL);
-                     status = create_filenames(&final_filename, &use_filename, state.common_settings.filename, frame);
+                     status = create_filenames(&final_filename, &use_filename, filename, frame);
                      if (status  != MMAL_SUCCESS)
                      {
                         vcos_log_error("Unable to create filenames");
@@ -232,16 +196,7 @@ int main(int argc, const char **argv)
                   callback_data.file_handle = output_file;
                }
 
-               // We only capture if a filename was specified and it opened
-               if (state.useGL && state.glCapture && output_file)
-               {
-                  /* Save the next GL framebuffer as the next camera still */
-                  int rc = raspitex_capture(&state.raspitex_state, output_file);
-                  if (rc != 0)
-                     vcos_log_error("Failed to capture GL preview");
-                  rename_file(&state, output_file, final_filename, use_filename, frame);
-               }
-               else if (output_file)
+               if (output_file)
                {
                   int num, q;
 
@@ -294,39 +249,6 @@ int main(int argc, const char **argv)
 
                      if (mmal_port_send_buffer(encoder_output_port, buffer)!= MMAL_SUCCESS)
                         vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
-                  }
-
-                  if (state.burstCaptureMode)
-                  {
-                     mmal_port_parameter_set_boolean(state.camera_component->control,  MMAL_PARAMETER_CAMERA_BURST_CAPTURE, 1);
-                  }
-
-                  if(state.camera_parameters.enable_annotate)
-                  {
-                     if ((state.camera_parameters.enable_annotate & ANNOTATE_APP_TEXT) && state.common_settings.gps)
-                     {
-                        char *text = raspi_gps_location_string();
-                        raspicamcontrol_set_annotate(state.camera_component, state.camera_parameters.enable_annotate,
-                                                     text,
-                                                     state.camera_parameters.annotate_text_size,
-                                                     state.camera_parameters.annotate_text_colour,
-                                                     state.camera_parameters.annotate_bg_colour,
-                                                     state.camera_parameters.annotate_justify,
-                                                     state.camera_parameters.annotate_x,
-                                                     state.camera_parameters.annotate_y
-                                                    );
-                        free(text);
-                     }
-                     else
-                        raspicamcontrol_set_annotate(state.camera_component, state.camera_parameters.enable_annotate,
-                                                     state.camera_parameters.annotate_string,
-                                                     state.camera_parameters.annotate_text_size,
-                                                     state.camera_parameters.annotate_text_colour,
-                                                     state.camera_parameters.annotate_bg_colour,
-                                                     state.camera_parameters.annotate_justify,
-                                                     state.camera_parameters.annotate_x,
-                                                     state.camera_parameters.annotate_y
-                                                    );
                   }
 
                   if (state.common_settings.verbose)
