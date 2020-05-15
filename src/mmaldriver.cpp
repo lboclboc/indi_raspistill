@@ -89,10 +89,11 @@ bool MMALDriver::updateProperties()
 	// We must ALWAYS call the parent class updateProperties() first
 	CCD::updateProperties();
 
+    PrimaryCCD.setBPP(16);
 
 	// Let's get parameters now from CCD
 	// Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
-	SetCCDParams(4056, 3040, 16, 1.55, 1.55);
+    SetCCDParams(4056, 3040, 16, 1.55L, 1.55L);
 
 	updateFrameBufferSize();
 
@@ -243,7 +244,7 @@ void MMALDriver::TimerHit()
 void MMALDriver::grabImage()
 {
     // Let's get a pointer to the frame buffer
-    uint8_t *image = PrimaryCCD.getFrameBuffer();
+    uint16_t *image = (uint16_t *)PrimaryCCD.getFrameBuffer();
     const char filename[] = "x.jpg";
 
     // Get width and height
