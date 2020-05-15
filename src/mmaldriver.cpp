@@ -1,9 +1,17 @@
 /**
  * INDI driver for Raspberry Pi 12Mp High Quality camera.
  */
+#include <fcntl.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "mmaldriver.h"
+
+extern "C" {
+extern int raspi_exposure();
+}
 
 MMALDriver::MMALDriver()
 {
@@ -236,17 +244,82 @@ void MMALDriver::grabImage()
 {
     // Let's get a pointer to the frame buffer
     uint8_t *image = PrimaryCCD.getFrameBuffer();
+    const char filename[] = "x.jpg";
 
     // Get width and height
-    int width  = (PrimaryCCD.getSubW() / PrimaryCCD.getBinX() * PrimaryCCD.getBPP() + 7)/ 8;
-    int height = PrimaryCCD.getSubH() / PrimaryCCD.getBinY();
+//    int width  = (PrimaryCCD.getSubW() / PrimaryCCD.getBinX() * PrimaryCCD.getBPP() + 7)/ 8;
+//    int height = PrimaryCCD.getSubH() / PrimaryCCD.getBinY();
 
-    // Fill buffer with random pattern
-    for (int i = 0; i < height; i++)
-        for (int j = 0; j < width; j++)
-            image[i * width + j] = rand() % 255;
+    // Perform the actual exposure.
+    raspi_exposure();
+    fprintf(stderr,"Image exposed to %s.\n", filename);
 
-    PrimaryCCD.binFrame();
+    FILE *fp = fopen(filename, "rb");
+    fprintf(stderr, "File opened\n");
+    fprintf(stderr, "Start pos: %ld\n", ftell(fp));
+
+    struct stat statbuf;
+    if (stat(filename, &statbuf) != 0) {
+        LOGF_ERROR("%s: Failed to stat %s file: %s", __FUNCTION__, filename, strerror(errno));
+        exit(1);
+    }
+
+    if (!fp) {
+        LOGF_ERROR("%s: Failed to open %s file: %s", __FUNCTION__, filename, strerror(errno));
+        exit(1);
+    }
+    fprintf(stderr, "Start pos: %ld\n", ftell(fp));
+
+    // FIXME: remove all hardcoding for IMAX477 camera.
+    int raw_file_size = 18711040;
+    int brcm_header_size = 32768;
+    int pixels_to_send = 4056 * 3040; // FIXME: The raw image really has some other strange size.
+    fprintf(stderr,"Seeking to %ld\n", statbuf.st_size - raw_file_size);
+    if (fseek(fp, statbuf.st_size - raw_file_size, SEEK_SET) != 0)  {
+        LOGF_ERROR("%s: Wrong size of %s: %s", __FUNCTION__, filename, strerror(errno));
+        exit(1);
+    }
+    fprintf(stderr, "BRCM pos: %ld\n", ftell(fp));
+    if (fseek(fp, brcm_header_size, SEEK_CUR) != 0) {
+        LOGF_ERROR("%s: File to small: %s", __FUNCTION__, strerror(errno));
+        exit(1);
+    }
+    fprintf(stderr, "Current pos: %ld\n", ftell(fp));
+
+    size_t bs = 640;
+    int i = 0;
+    for(i = 0; i < pixels_to_send; i += bs) {
+        bool retry = true;
+        while(retry)
+        {
+            retry = false;
+            fread(image + i, 1, bs, fp);
+            if (ferror(fp)) {
+                if (errno != EAGAIN) {
+                    LOGF_ERROR("%s: Failed to read from file: %s", __FUNCTION__, strerror(errno));
+                    exit(1);
+                }
+                else {
+                    LOGF_ERROR("%s: Failed to read from file: %s, retrying..", __FUNCTION__, strerror(errno));
+                    sleep(1);
+                }
+                retry = true;
+
+            }
+        }
+        printf("%02x ", image[i]);
+    }
+    LOGF_DEBUG("%s: Wrote %d bytes: %.640s", __FUNCTION__, i, image);
+    char buf[1000];
+    char *p = buf;
+    for(i = 0; i < 64; i++) {
+        p += sprintf(p, "%02x ", image[i + 1024]);
+    }
+    LOGF_DEBUG("%s: Wrote: %.1024s", __FUNCTION__, buf);
+
+
+    // FIXME: add hw binning
+ //   PrimaryCCD.binFrame();
 
     IDMessage(getDeviceName(), "Download complete.");
 
