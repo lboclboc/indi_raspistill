@@ -38,8 +38,6 @@ def process_hyp1(row, fout):
     for p in range(0, BRCMo.pixel_row_size, 9):
         for ch in range(3):
             # Write out per channel in little endian 16 bit
-            #fout[channel].write(bytes([row[p + channel]]))
-            # FIXME: Currently only 8 channel
             fout[ch].write(bytes([row[p + ch], (row[p + ch + 6] & 0xF)]))
             fout[ch].write(bytes([row[p + 3 + ch], (row[p + ch + 6] & 0xF0) >> 4]))
 
