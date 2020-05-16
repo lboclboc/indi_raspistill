@@ -273,39 +273,49 @@ void MMALDriver::grabImage()
     }
 
     // FIXME: remove all hardcoding for IMAX477 camera. Should at least try to parse the BCRM header.
-    int raw_file_size = 18711040;
-    int brcm_header_size = 32768;
+    const int raw_file_size = 18711040;
+    const int brcm_header_size = 32768;
     int pixels_to_send = PrimaryCCD.getFrameBufferSize() / PrimaryCCD.getBPP();
 
     assert_framebuffer(&PrimaryCCD);
 
-    if (fseek(fp, statbuf.st_size + brcm_header_size - raw_file_size, SEEK_SET) != 0)  {
+    if (fseek(fp, statbuf.st_size - raw_file_size, SEEK_SET) != 0)  {
         LOGF_ERROR("%s: Wrong size of %s: %s", __FUNCTION__, filename, strerror(errno));
         exit(1);
     }
 
-    const int raw_row_size = 6112;
-    const int trailer = 28;
-    uint8_t row[raw_row_size];
-    int i = 0;
-    while(i < pixels_to_send)
     {
-        fread(row, raw_row_size, 1, fp);
-        if (ferror(fp)) {
-                LOGF_ERROR("%s: Failed to read from file: %s, retrying..", __FUNCTION__, strerror(errno));
-                sleep(1);
-        }
-
-        for(int p = 0; p < raw_row_size - trailer; p += 3)
-        {
-            uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
-            uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
-            image[i++ + p] = v1;
-            image[i++ + p] = v2;
+        char brcm_header[brcm_header_size];
+        fread(brcm_header, brcm_header_size, 1, fp);
+        if (strcmp(brcm_header, "BRCMo")) {
+            LOGF_ERROR("%s: Missing BRCMo header, found %.10s as pos %ld", __FUNCTION__, brcm_header, ftell(fp));
+            exit(1);
         }
     }
-    LOGF_DEBUG("%s: Wrote %d bytes", __FUNCTION__, i);
 
+    {
+        const int raw_row_size = 6112;
+        const int trailer = 28;
+        uint8_t row[raw_row_size];
+        int i = 0;
+        while(i < pixels_to_send)
+        {
+            fread(row, raw_row_size, 1, fp);
+            if (ferror(fp)) {
+                    LOGF_ERROR("%s: Failed to read from file: %s, retrying..", __FUNCTION__, strerror(errno));
+                    sleep(1);
+            }
+
+            for(int p = 0; p < raw_row_size - trailer; p += 3)
+            {
+                uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
+                uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
+                image[i++] = v1;
+                image[i++] = v2;
+            }
+        }
+        LOGF_DEBUG("%s: Wrote %d bytes", __FUNCTION__, i);
+    }
     // FIXME: add hw binning
  //   PrimaryCCD.binFrame();
 
