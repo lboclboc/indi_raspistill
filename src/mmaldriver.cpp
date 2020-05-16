@@ -10,7 +10,7 @@
 #include "mmaldriver.h"
 
 extern "C" {
-extern int raspi_exposure();
+    extern int raspi_exposure();
 }
 
 MMALDriver::MMALDriver()
@@ -20,6 +20,19 @@ MMALDriver::MMALDriver()
 
 MMALDriver::~MMALDriver()
 {
+}
+
+void MMALDriver::assert_framebuffer(INDI::CCDChip *ccd)
+{
+    int nbuf = (ccd->getXRes() * ccd->getYRes() * (ccd->getBPP() / 8));
+    int expected = 4056 * 3040 * 2;
+    if (nbuf != expected) {
+        LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
+        LOGF_ERROR("%s: Wrong size of framebuffer: %d, expected %d", __FUNCTION__, nbuf, expected);
+        exit(1);
+    }
+
+    LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
 }
 
 /**************************************************************************************
@@ -80,6 +93,7 @@ bool MMALDriver::initProperties()
     setDefaultPollingPeriod(500);
 
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 1, 10000, 1, false);
+    PrimaryCCD.setResolution(4056, 3040);
 
     return true;
 }
@@ -95,7 +109,7 @@ bool MMALDriver::updateProperties()
 	// Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
     SetCCDParams(4056, 3040, 16, 1.55L, 1.55L);
 
-	updateFrameBufferSize();
+    UpdateCCDFrame(0, 0, 4056, 3040);
 
 	return true;
 }
@@ -110,19 +124,6 @@ bool MMALDriver::UpdateCCDBin(int hor, int ver)
 }
 
 /**************************************************************************************
- * Calculate memory need for new frame size and updates PrimaryCCD.
- **************************************************************************************/
-void MMALDriver::updateFrameBufferSize()
-{
-    LOGF_DEBUG("%s: frame bytes %d", __FUNCTION__, PrimaryCCD.getFrameBufferSize());
-	ulong frameBytes;
-
-	frameBytes = PrimaryCCD.getSubW() * PrimaryCCD.getSubH() * ((PrimaryCCD.getBPP() + 7) / 8);
-
-    PrimaryCCD.setFrameBufferSize(frameBytes);
-}
-
-/**************************************************************************************
  * CCD calls this function when CCD Frame dimension needs to be updated in the hardware.
  * Derived classes should implement this function.
  **************************************************************************************/
@@ -130,8 +131,15 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
 {
 	LOGF_DEBUG("UpdateCCDFrame(%d, %d, %d, %d", x, y, w, h);
 
+    // FIXME: handle cropping
+    if (x + y != 0) {
+        LOGF_ERROR("%s: origin offset not supported.", __FUNCTION__);
+    }
+
     // Let's calculate how much memory we need for the primary CCD buffer
-    int nbuf = (PrimaryCCD.getXRes() * PrimaryCCD.getYRes() * PrimaryCCD.getBPP() + 7) / 8;
+    int nbuf = (PrimaryCCD.getXRes() * PrimaryCCD.getYRes() * (PrimaryCCD.getBPP() / 8));
+
+    LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
 
     PrimaryCCD.setFrameBufferSize(nbuf);
 
@@ -244,20 +252,19 @@ void MMALDriver::TimerHit()
 void MMALDriver::grabImage()
 {
     // Let's get a pointer to the frame buffer
-    uint16_t *image = (uint16_t *)PrimaryCCD.getFrameBuffer();
+    uint16_t *image = reinterpret_cast<uint16_t *>(PrimaryCCD.getFrameBuffer());
     const char filename[] = "x.jpg";
 
-    // Get width and height
-//    int width  = (PrimaryCCD.getSubW() / PrimaryCCD.getBinX() * PrimaryCCD.getBPP() + 7)/ 8;
-//    int height = PrimaryCCD.getSubH() / PrimaryCCD.getBinY();
-
     // Perform the actual exposure.
+    // FIXME: add exposure time.
     raspi_exposure();
     fprintf(stderr,"Image exposed to %s.\n", filename);
 
     FILE *fp = fopen(filename, "rb");
-    fprintf(stderr, "File opened\n");
-    fprintf(stderr, "Start pos: %ld\n", ftell(fp));
+    if (!fp)  {
+        LOGF_ERROR("%s: Failed to open %s: %s", __FUNCTION__, filename, strerror(errno));
+        exit(1);
+    }
 
     struct stat statbuf;
     if (stat(filename, &statbuf) != 0) {
@@ -265,59 +272,39 @@ void MMALDriver::grabImage()
         exit(1);
     }
 
-    if (!fp) {
-        LOGF_ERROR("%s: Failed to open %s file: %s", __FUNCTION__, filename, strerror(errno));
-        exit(1);
-    }
-    fprintf(stderr, "Start pos: %ld\n", ftell(fp));
-
-    // FIXME: remove all hardcoding for IMAX477 camera.
+    // FIXME: remove all hardcoding for IMAX477 camera. Should at least try to parse the BCRM header.
     int raw_file_size = 18711040;
     int brcm_header_size = 32768;
-    int pixels_to_send = 4056 * 3040; // FIXME: The raw image really has some other strange size.
-    fprintf(stderr,"Seeking to %ld\n", statbuf.st_size - raw_file_size);
-    if (fseek(fp, statbuf.st_size - raw_file_size, SEEK_SET) != 0)  {
+    int pixels_to_send = PrimaryCCD.getFrameBufferSize() / PrimaryCCD.getBPP();
+
+    assert_framebuffer(&PrimaryCCD);
+
+    if (fseek(fp, statbuf.st_size + brcm_header_size - raw_file_size, SEEK_SET) != 0)  {
         LOGF_ERROR("%s: Wrong size of %s: %s", __FUNCTION__, filename, strerror(errno));
         exit(1);
     }
-    fprintf(stderr, "BRCM pos: %ld\n", ftell(fp));
-    if (fseek(fp, brcm_header_size, SEEK_CUR) != 0) {
-        LOGF_ERROR("%s: File to small: %s", __FUNCTION__, strerror(errno));
-        exit(1);
-    }
-    fprintf(stderr, "Current pos: %ld\n", ftell(fp));
 
-    size_t bs = 640;
+    const int raw_row_size = 6112;
+    const int trailer = 28;
+    uint8_t row[raw_row_size];
     int i = 0;
-    for(i = 0; i < pixels_to_send; i += bs) {
-        bool retry = true;
-        while(retry)
-        {
-            retry = false;
-            fread(image + i, 1, bs, fp);
-            if (ferror(fp)) {
-                if (errno != EAGAIN) {
-                    LOGF_ERROR("%s: Failed to read from file: %s", __FUNCTION__, strerror(errno));
-                    exit(1);
-                }
-                else {
-                    LOGF_ERROR("%s: Failed to read from file: %s, retrying..", __FUNCTION__, strerror(errno));
-                    sleep(1);
-                }
-                retry = true;
-
-            }
+    while(i < pixels_to_send)
+    {
+        fread(row, raw_row_size, 1, fp);
+        if (ferror(fp)) {
+                LOGF_ERROR("%s: Failed to read from file: %s, retrying..", __FUNCTION__, strerror(errno));
+                sleep(1);
         }
-        printf("%02x ", image[i]);
-    }
-    LOGF_DEBUG("%s: Wrote %d bytes: %.640s", __FUNCTION__, i, image);
-    char buf[1000];
-    char *p = buf;
-    for(i = 0; i < 64; i++) {
-        p += sprintf(p, "%02x ", image[i + 1024]);
-    }
-    LOGF_DEBUG("%s: Wrote: %.1024s", __FUNCTION__, buf);
 
+        for(int p = 0; p < raw_row_size - trailer; p += 3)
+        {
+            uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
+            uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
+            image[i++ + p] = v1;
+            image[i++ + p] = v2;
+        }
+    }
+    LOGF_DEBUG("%s: Wrote %d bytes", __FUNCTION__, i);
 
     // FIXME: add hw binning
  //   PrimaryCCD.binFrame();

@@ -33,6 +33,7 @@ private:
   void setupParams();
   void grabImage();
   void updateFrameBufferSize();
+  void assert_framebuffer(INDI::CCDChip *ccd);
 
   // Are we exposing?
   bool InExposure { false };
