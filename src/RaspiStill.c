@@ -100,7 +100,6 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
         vcos_log_error("Could not select camera : error %d", status);
         goto error;
     }
-
     if (!camera->output_num)
     {
         status = MMAL_ENOSYS;
@@ -115,13 +114,10 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
         goto error;
     }
 
-    preview_port = camera->output[MMAL_CAMERA_PREVIEW_PORT];
-    video_port = camera->output[MMAL_CAMERA_VIDEO_PORT];
     still_port = camera->output[MMAL_CAMERA_CAPTURE_PORT];
 
     // Enable the camera, and tell it its control callback function
     status = mmal_port_enable(camera->control, default_camera_control_callback);
-
     if (status != MMAL_SUCCESS)
     {
         vcos_log_error("Unable to enable control port : error %d", status);
@@ -130,8 +126,7 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
 
     //  set up the camera configuration
     {
-        MMAL_PARAMETER_CAMERA_CONFIG_T cam_config =
-        {
+        MMAL_PARAMETER_CAMERA_CONFIG_T cam_config = {
             { MMAL_PARAMETER_CAMERA_CONFIG, sizeof(cam_config) },
             .max_stills_w = state->common_settings.width,
             .max_stills_h = state->common_settings.height,
@@ -157,71 +152,6 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
     raspicamcontrol_set_all_parameters(camera, &state->camera_parameters);
 
     // Now set up the port formats
-
-    format = preview_port->format;
-    format->encoding = MMAL_ENCODING_OPAQUE;
-    format->encoding_variant = MMAL_ENCODING_I420;
-
-    if(state->camera_parameters.shutter_speed > 6000000)
-    {
-        MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
-                                                { 5, 1000 }, {166, 1000}
-                                               };
-        mmal_port_parameter_set(preview_port, &fps_range.hdr);
-    }
-    else if(state->camera_parameters.shutter_speed > 1000000)
-    {
-        MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
-                                                { 166, 1000 }, {999, 1000}
-                                               };
-        mmal_port_parameter_set(preview_port, &fps_range.hdr);
-    }
-    if (state->fullResPreview)
-    {
-        // In this mode we are forcing the preview to be generated from the full capture resolution.
-        // This runs at a max of 15fps with the OV5647 sensor.
-        format->es->video.width = VCOS_ALIGN_UP(state->common_settings.width, 32);
-        format->es->video.height = VCOS_ALIGN_UP(state->common_settings.height, 16);
-        format->es->video.crop.x = 0;
-        format->es->video.crop.y = 0;
-        format->es->video.crop.width = state->common_settings.width;
-        format->es->video.crop.height = state->common_settings.height;
-        format->es->video.frame_rate.num = FULL_RES_PREVIEW_FRAME_RATE_NUM;
-        format->es->video.frame_rate.den = FULL_RES_PREVIEW_FRAME_RATE_DEN;
-    }
-    else
-    {
-        // Use a full FOV 4:3 mode
-        format->es->video.width = VCOS_ALIGN_UP(state->preview_parameters.previewWindow.width, 32);
-        format->es->video.height = VCOS_ALIGN_UP(state->preview_parameters.previewWindow.height, 16);
-        format->es->video.crop.x = 0;
-        format->es->video.crop.y = 0;
-        format->es->video.crop.width = state->preview_parameters.previewWindow.width;
-        format->es->video.crop.height = state->preview_parameters.previewWindow.height;
-        format->es->video.frame_rate.num = PREVIEW_FRAME_RATE_NUM;
-        format->es->video.frame_rate.den = PREVIEW_FRAME_RATE_DEN;
-    }
-
-    status = mmal_port_format_commit(preview_port);
-    if (status != MMAL_SUCCESS)
-    {
-        vcos_log_error("camera viewfinder format couldn't be set");
-        goto error;
-    }
-
-    // Set the same format on the video  port (which we don't use here)
-    mmal_format_full_copy(video_port->format, format);
-    status = mmal_port_format_commit(video_port);
-
-    if (status  != MMAL_SUCCESS)
-    {
-        vcos_log_error("camera video format couldn't be set");
-        goto error;
-    }
-
-    // Ensure there are enough buffers to avoid dropping frames
-    if (video_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM)
-        video_port->buffer_num = VIDEO_OUTPUT_BUFFERS_NUM;
 
     format = still_port->format;
 
