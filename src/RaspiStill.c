@@ -310,14 +310,12 @@ error:
     return status;
 }
 
-int raspi_exposure()
+int raspi_exposure(float exposure)
 {
     // Our main data storage vessel..
     char filename[] = "x.jpg";
 
     int exit_code = EX_OK;
-
-    printf("FIXME: Hey this is my main\n");
 
     MMAL_STATUS_T status = MMAL_SUCCESS;
     MMAL_PORT_T *camera_preview_port = NULL;
@@ -343,6 +341,7 @@ int raspi_exposure()
     state.preview_parameters.wantPreview = 0;
     state.timeout = 1;
     state.common_settings.verbose = 1;
+    state.camera_parameters.shutter_speed = exposure * 1000000L;
 
     if (state.timeout == -1)
         state.timeout = 5000;
@@ -541,13 +540,3 @@ error:
     return exit_code;
 }
 
-
-/**
- * main
- */
-#if 0
-int main(int argc, const char **argv)
-{
-    raspi_exposure();
-}
-#endif

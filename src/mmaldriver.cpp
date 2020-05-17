@@ -10,7 +10,7 @@
 #include "mmaldriver.h"
 
 extern "C" {
-    extern int raspi_exposure();
+    extern int raspi_exposure(float exposure);
 }
 
 MMALDriver::MMALDriver()
@@ -92,8 +92,13 @@ bool MMALDriver::initProperties()
 
     setDefaultPollingPeriod(500);
 
-    PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 1, 10000, 1, false);
-    PrimaryCCD.setResolution(4056, 3040);
+    PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 10000, .001, false);
+//    PrimaryCCD.setCompressed(false);
+    PrimaryCCD.setImageExtension("raw");
+
+    SetCCDParams(4056, 3040, 16, 1.55L, 1.55L);
+
+    UpdateCCDFrame(0, 0, 4056, 3040);
 
     return true;
 }
@@ -102,14 +107,6 @@ bool MMALDriver::updateProperties()
 {
 	// We must ALWAYS call the parent class updateProperties() first
 	CCD::updateProperties();
-
-    PrimaryCCD.setBPP(16);
-
-	// Let's get parameters now from CCD
-	// Our CCD is an 12 bit CCD, 4054x3040 resolution, with 1.55um square pixels.
-    SetCCDParams(4056, 3040, 16, 1.55L, 1.55L);
-
-    UpdateCCDFrame(0, 0, 4056, 3040);
 
 	return true;
 }
@@ -148,6 +145,7 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
 
 /**************************************************************************************
  * Client is asking us to start an exposure
+ * \param duration exposure time in seconds.
  **************************************************************************************/
 bool MMALDriver::StartExposure(float duration)
 {
@@ -256,8 +254,7 @@ void MMALDriver::grabImage()
     const char filename[] = "x.jpg";
 
     // Perform the actual exposure.
-    // FIXME: add exposure time.
-    raspi_exposure();
+    raspi_exposure(ExposureRequest);
     fprintf(stderr,"Image exposed to %s.\n", filename);
 
     FILE *fp = fopen(filename, "rb");
@@ -275,7 +272,7 @@ void MMALDriver::grabImage()
     // FIXME: remove all hardcoding for IMAX477 camera. Should at least try to parse the BCRM header.
     const int raw_file_size = 18711040;
     const int brcm_header_size = 32768;
-    int pixels_to_send = PrimaryCCD.getFrameBufferSize() / PrimaryCCD.getBPP();
+    int pixels_to_send = PrimaryCCD.getFrameBufferSize() / (PrimaryCCD.getBPP() / 8);
 
     assert_framebuffer(&PrimaryCCD);
 
@@ -314,10 +311,7 @@ void MMALDriver::grabImage()
                 image[i++] = v2;
             }
         }
-        LOGF_DEBUG("%s: Wrote %d bytes", __FUNCTION__, i);
     }
-    // FIXME: add hw binning
- //   PrimaryCCD.binFrame();
 
     IDMessage(getDeviceName(), "Download complete.");
 
