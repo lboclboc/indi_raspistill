@@ -62,6 +62,7 @@ if __name__ == '__main__':
 
     with open(sys.argv[1], "rb") as fin:
         fin.seek(brcmo_start, 0)
+
         with open(sys.argv[1] + ".brcm", "wb") as fout:
             brcm = fin.read(BRCMo.header_size)
             fout.write(brcm)

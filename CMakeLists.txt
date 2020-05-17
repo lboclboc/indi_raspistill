@@ -25,6 +25,7 @@ include_directories(${USERLAND_SRC}/host_applications/linux/libs/bcm_host/includ
 
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h ${CMAKE_CURRENT_BINARY_DIR}/config.h )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/indi_raspistill.xml.cmake ${CMAKE_CURRENT_BINARY_DIR}/indi_raspistill.xml )
 
 add_library(raspilib OBJECT IMPORTED GLOBAL)
 set_property(TARGET raspilib PROPERTY IMPORTED_OBJECTS

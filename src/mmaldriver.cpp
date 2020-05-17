@@ -289,7 +289,7 @@ void MMALDriver::grabImage()
             exit(1);
         }
     }
-
+    std::unique_lock<std::mutex> guard(ccdBufferLock);
     {
         const int raw_row_size = 6112;
         const int trailer = 28;
@@ -312,6 +312,7 @@ void MMALDriver::grabImage()
             }
         }
     }
+    guard.unlock();
 
     IDMessage(getDeviceName(), "Download complete.");
 
