@@ -91,7 +91,7 @@ target_link_libraries(indi_raspistill ${INDI_DRIVER_LIBRARIES} ${CFITSIO_LIBRARI
 
 add_dependencies(indi_raspistill userland)
 
-#install(TARGETS indi_raspistill RUNTIME DESTINATION bin )
-#install(FILES indi_qsi.xml DESTINATION ${INDI_DATA_DIR})
+install(TARGETS indi_raspistill RUNTIME DESTINATION bin )
+install(FILES indi_raspistill.xml DESTINATION ${INDI_DATA_DIR})
 #install(FILES 99-qsi.rules DESTINATION ${RULES_INSTALL_DIR})
 

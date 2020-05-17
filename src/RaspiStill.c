@@ -87,27 +87,14 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
 
     /* Create the component */
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera);
-
     if (status != MMAL_SUCCESS)
     {
         vcos_log_error("Failed to create camera component");
         goto error;
     }
 
-    status = raspicamcontrol_set_stereo_mode(camera->output[0], &state->camera_parameters.stereo_mode);
-    status += raspicamcontrol_set_stereo_mode(camera->output[1], &state->camera_parameters.stereo_mode);
-    status += raspicamcontrol_set_stereo_mode(camera->output[2], &state->camera_parameters.stereo_mode);
-
-    if (status != MMAL_SUCCESS)
-    {
-        vcos_log_error("Could not set stereo mode : error %d", status);
-        goto error;
-    }
-
     MMAL_PARAMETER_INT32_T camera_num = {{MMAL_PARAMETER_CAMERA_NUM, sizeof(camera_num)}, state->common_settings.cameraNum};
-
     status = mmal_port_parameter_set(camera->control, &camera_num.hdr);
-
     if (status != MMAL_SUCCESS)
     {
         vcos_log_error("Could not select camera : error %d", status);
@@ -122,7 +109,6 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
     }
 
     status = mmal_port_parameter_set_uint32(camera->control, MMAL_PARAMETER_CAMERA_CUSTOM_SENSOR_CONFIG, state->common_settings.sensor_mode);
-
     if (status != MMAL_SUCCESS)
     {
         vcos_log_error("Could not set sensor mode : error %d", status);

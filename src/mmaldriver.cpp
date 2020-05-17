@@ -316,12 +316,15 @@ void MMALDriver::grabImage()
                 uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
                 uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
                 image[i++] = v1 & 0xFF;
-                image[i++] = v1 & 0xFF00 >> 8;
+                image[i++] = (v1 & 0xFF00) >> 8;
                 image[i++] = v2 & 0xFF;
-                image[i++] = v2 & 0xFF00 >> 8;
+                image[i++] = (v2 & 0xFF00) >> 8;
             }
         }
     }
+    fclose(fp);
+    unlink(filename);
+
     guard.unlock();
 
     IDMessage(getDeviceName(), "Download complete.");
