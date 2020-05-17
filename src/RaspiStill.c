@@ -313,7 +313,7 @@ error:
 int raspi_exposure(float exposure)
 {
     // Our main data storage vessel..
-    char filename[] = "x.jpg";
+    char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
 
     int exit_code = EX_OK;
 

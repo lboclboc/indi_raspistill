@@ -94,7 +94,7 @@ bool MMALDriver::initProperties()
 
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 10000, .001, false);
 //    PrimaryCCD.setCompressed(false);
-    PrimaryCCD.setImageExtension("raw");
+//    PrimaryCCD.setImageExtension("raw"); // FIXME: use FITS instead
 
     SetCCDParams(4056, 3040, 16, 1.55L, 1.55L);
 
@@ -149,7 +149,14 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
  **************************************************************************************/
 bool MMALDriver::StartExposure(float duration)
 {
-	LOGF_DEBUG("StartEposure(%f)", duration);
+
+    if (InExposure)
+    {
+        LOG_ERROR("Camera is already exposing.");
+        return false;
+    }
+
+    LOGF_DEBUG("StartEposure(%f)", duration);
 
     ExposureRequest = duration;
 
@@ -250,10 +257,11 @@ void MMALDriver::TimerHit()
 void MMALDriver::grabImage()
 {
     // Let's get a pointer to the frame buffer
-    uint16_t *image = reinterpret_cast<uint16_t *>(PrimaryCCD.getFrameBuffer());
-    const char filename[] = "x.jpg";
+    uint8_t *image = PrimaryCCD.getFrameBuffer();
+    const char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
 
     // Perform the actual exposure.
+    // FIXME: Should be a separate thread, this thread should just be waiting.
     raspi_exposure(ExposureRequest);
     fprintf(stderr,"Image exposed to %s.\n", filename);
 
@@ -272,7 +280,7 @@ void MMALDriver::grabImage()
     // FIXME: remove all hardcoding for IMAX477 camera. Should at least try to parse the BCRM header.
     const int raw_file_size = 18711040;
     const int brcm_header_size = 32768;
-    int pixels_to_send = PrimaryCCD.getFrameBufferSize() / (PrimaryCCD.getBPP() / 8);
+    int bytes_to_fill = PrimaryCCD.getFrameBufferSize();
 
     assert_framebuffer(&PrimaryCCD);
 
@@ -295,7 +303,7 @@ void MMALDriver::grabImage()
         const int trailer = 28;
         uint8_t row[raw_row_size];
         int i = 0;
-        while(i < pixels_to_send)
+        while(i < bytes_to_fill)
         {
             fread(row, raw_row_size, 1, fp);
             if (ferror(fp)) {
@@ -307,8 +315,10 @@ void MMALDriver::grabImage()
             {
                 uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
                 uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
-                image[i++] = v1;
-                image[i++] = v2;
+                image[i++] = v1 & 0xFF;
+                image[i++] = v1 & 0xFF00 >> 8;
+                image[i++] = v2 & 0xFF;
+                image[i++] = v2 & 0xFF00 >> 8;
             }
         }
     }
