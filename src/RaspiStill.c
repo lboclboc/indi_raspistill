@@ -82,7 +82,7 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
 {
     MMAL_COMPONENT_T *camera = 0;
     MMAL_ES_FORMAT_T *format;
-    MMAL_PORT_T *preview_port = NULL, *video_port = NULL, *still_port = NULL;
+    MMAL_PORT_T *still_port = NULL;
     MMAL_STATUS_T status;
 
     /* Create the component */
@@ -201,16 +201,6 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
         goto error;
     }
 
-    if (state->useGL)
-    {
-        status = raspitex_configure_preview_port(&state->raspitex_state, preview_port);
-        if (status != MMAL_SUCCESS)
-        {
-            fprintf(stderr, "Failed to configure preview port for GL rendering");
-            goto error;
-        }
-    }
-
     state->camera_component = camera;
 
     if (state->common_settings.verbose)
@@ -226,7 +216,7 @@ error:
     return status;
 }
 
-int raspi_exposure(float exposure)
+int raspi_exposure(long exposure)
 {
     // Our main data storage vessel..
     char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
@@ -234,10 +224,9 @@ int raspi_exposure(float exposure)
     int exit_code = EX_OK;
 
     MMAL_STATUS_T status = MMAL_SUCCESS;
-    MMAL_PORT_T *camera_preview_port = NULL;
-    MMAL_PORT_T *camera_video_port = NULL;
+
     MMAL_PORT_T *camera_still_port = NULL;
-    MMAL_PORT_T *preview_input_port = NULL;
+
     MMAL_PORT_T *encoder_input_port = NULL;
     MMAL_PORT_T *encoder_output_port = NULL;
 
@@ -271,7 +260,8 @@ int raspi_exposure(float exposure)
     // Camera and encoder are different in stills/video, but preview
     // is the same so handed off to a separate module
 
-    if ((status = my_create_camera_component(&state)) != MMAL_SUCCESS)
+    // FIXME: my_create_camera_component does not handle longer exposure than 1s
+    if ((status = create_camera_component(&state)) != MMAL_SUCCESS)
     {
         vcos_log_error("%s: Failed to create camera component", __func__);
         exit_code = EX_SOFTWARE;
@@ -296,8 +286,6 @@ int raspi_exposure(float exposure)
         if (state.common_settings.verbose)
             fprintf(stderr, "Starting component connection stage\n");
 
-        camera_preview_port = state.camera_component->output[MMAL_CAMERA_PREVIEW_PORT];
-        camera_video_port   = state.camera_component->output[MMAL_CAMERA_VIDEO_PORT];
         camera_still_port   = state.camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
         encoder_input_port  = state.encoder_component->input[0];
         encoder_output_port = state.encoder_component->output[0];
@@ -407,24 +395,10 @@ int raspi_exposure(float exposure)
         }
 
 error:
-
         mmal_status_to_int(status);
 
-        if (state.common_settings.verbose)
-            fprintf(stderr, "Closing down\n");
-
-        if (state.useGL)
-        {
-            raspitex_stop(&state.raspitex_state);
-            raspitex_destroy(&state.raspitex_state);
-        }
-
         // Disable all our ports that are not handled by connections
-        check_disable_port(camera_video_port);
         check_disable_port(encoder_output_port);
-
-        if (state.preview_connection)
-            mmal_connection_destroy(state.preview_connection);
 
         if (state.encoder_connection)
             mmal_connection_destroy(state.encoder_connection);
@@ -433,21 +407,12 @@ error:
         if (state.encoder_component)
             mmal_component_disable(state.encoder_component);
 
-        if (state.preview_parameters.preview_component)
-            mmal_component_disable(state.preview_parameters.preview_component);
-
         if (state.camera_component)
             mmal_component_disable(state.camera_component);
 
         destroy_encoder_component(&state);
-        raspipreview_destroy(&state.preview_parameters);
         destroy_camera_component(&state);
 
-        if (state.common_settings.verbose)
-            fprintf(stderr, "Close down completed, all components disconnected, disabled and destroyed\n\n");
-
-        if (state.common_settings.gps)
-            raspi_gps_shutdown(state.common_settings.verbose);
     }
 
     if (status != MMAL_SUCCESS)

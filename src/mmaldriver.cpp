@@ -10,7 +10,7 @@
 #include "mmaldriver.h"
 
 extern "C" {
-    extern int raspi_exposure(float exposure);
+    extern int raspi_exposure(long exposure);
 }
 
 MMALDriver::MMALDriver()
@@ -92,7 +92,7 @@ bool MMALDriver::initProperties()
 
     setDefaultPollingPeriod(500);
 
-    PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 10000, .001, false);
+    PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 1000, .0001, false);
 //    PrimaryCCD.setCompressed(false);
 //    PrimaryCCD.setImageExtension("raw"); // FIXME: use FITS instead
 
@@ -223,12 +223,14 @@ void MMALDriver::TimerHit()
         if (timeleft < 0)
             timeleft = 0;
 
+        // FIXME: make capturing occur in separate thread.
+        timeleft = 0;
+
         // Just update time left in client
         PrimaryCCD.setExposureLeft(timeleft);
 
         // Less than a 1 second away from exposure completion, use shorter timer. If less than 1m, take the image.
         if (timeleft < 1.0) {
-
             if (timeleft < 0.001) {
 				/* We're done exposing */
 				IDMessage(getDeviceName(), "Exposure done, downloading image...");
@@ -315,10 +317,10 @@ void MMALDriver::grabImage()
             {
                 uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
                 uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
+                image[i++] = (v1 >> 8) & 0xFF;
                 image[i++] = v1 & 0xFF;
-                image[i++] = (v1 & 0xFF00) >> 8;
+                image[i++] = (v2 >> 8) & 0xFF;
                 image[i++] = v2 & 0xFF;
-                image[i++] = (v2 & 0xFF00) >> 8;
             }
         }
     }
