@@ -216,17 +216,23 @@ error:
     return status;
 }
 
-int raspi_exposure(long exposure)
+/**
+ * Main exposure method.
+ *
+ * @param exposure Shutter time in us.
+ * @param iso ISO value.
+ *
+ * @return MMAL_SUCCESS if all OK, something else otherwise
+ *
+ */
+int raspi_exposure(long exposure, int iso)
 {
     // Our main data storage vessel..
     char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
-
     int exit_code = EX_OK;
 
     MMAL_STATUS_T status = MMAL_SUCCESS;
-
     MMAL_PORT_T *camera_still_port = NULL;
-
     MMAL_PORT_T *encoder_input_port = NULL;
     MMAL_PORT_T *encoder_output_port = NULL;
 
@@ -242,34 +248,25 @@ int raspi_exposure(long exposure)
     signal(SIGUSR2, SIG_IGN);
 
     default_status(&state);
-    state.wantRAW = true;
+
     state.preview_parameters.wantPreview = 0;
     state.timeout = 1;
-    state.common_settings.verbose = 1;
+    state.common_settings.verbose = 0;
     state.camera_parameters.shutter_speed = exposure * 1000000L;
+    state.frameNextMethod = FRAME_NEXT_IMMEDIATELY;
 
-    if (state.timeout == -1)
+    if (state.timeout == -1) {
         state.timeout = 5000;
+    }
 
     // Setup for sensor specific parameters
     get_sensor_defaults(state.common_settings.cameraNum, state.common_settings.camera_name,
                         &state.common_settings.width, &state.common_settings.height);
 
-    // OK, we have a nice set of parameters. Now set up our components
-    // We have three components. Camera, Preview and encoder.
-    // Camera and encoder are different in stills/video, but preview
-    // is the same so handed off to a separate module
-
     // FIXME: my_create_camera_component does not handle longer exposure than 1s
     if ((status = create_camera_component(&state)) != MMAL_SUCCESS)
     {
         vcos_log_error("%s: Failed to create camera component", __func__);
-        exit_code = EX_SOFTWARE;
-    }
-    else if ((!state.useGL) && (status = raspipreview_create(&state.preview_parameters)) != MMAL_SUCCESS)
-    {
-        vcos_log_error("%s: Failed to create preview component", __func__);
-        destroy_camera_component(&state);
         exit_code = EX_SOFTWARE;
     }
     else if ((status = create_encoder_component(&state)) != MMAL_SUCCESS)
@@ -283,9 +280,6 @@ int raspi_exposure(long exposure)
     {
         PORT_USERDATA callback_data;
 
-        if (state.common_settings.verbose)
-            fprintf(stderr, "Starting component connection stage\n");
-
         camera_still_port   = state.camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
         encoder_input_port  = state.encoder_component->input[0];
         encoder_output_port = state.encoder_component->output[0];
@@ -293,9 +287,6 @@ int raspi_exposure(long exposure)
         if (status == MMAL_SUCCESS)
         {
             VCOS_STATUS_T vcos_status;
-
-            if (state.common_settings.verbose)
-                fprintf(stderr, "Connecting camera stills port to encoder input port\n");
 
             // Now connect the camera to the encoder
             status = connect_ports(camera_still_port, encoder_input_port, &state.encoder_connection);
@@ -314,11 +305,7 @@ int raspi_exposure(long exposure)
 
             vcos_assert(vcos_status == VCOS_SUCCESS);
 
-
             FILE *output_file = NULL;
-
-            state.frameNextMethod = FRAME_NEXT_IMMEDIATELY;
-
 
             // Open the file
             output_file = fopen(filename, "wb");
@@ -344,9 +331,6 @@ int raspi_exposure(long exposure)
 
             // Enable the encoder output port
             encoder_output_port->userdata = (struct MMAL_PORT_USERDATA_T *)&callback_data;
-
-            if (state.common_settings.verbose)
-                fprintf(stderr, "Enabling encoder output port\n");
 
             // Enable the encoder output port and tell it its callback function
             status = mmal_port_enable(encoder_output_port, my_encoder_buffer_callback);
@@ -394,7 +378,7 @@ int raspi_exposure(long exposure)
             vcos_log_error("%s: Failed to connect camera to preview", __func__);
         }
 
-error:
+    error:
         mmal_status_to_int(status);
 
         // Disable all our ports that are not handled by connections
@@ -412,11 +396,11 @@ error:
 
         destroy_encoder_component(&state);
         destroy_camera_component(&state);
-
     }
 
-    if (status != MMAL_SUCCESS)
+    if (status != MMAL_SUCCESS) {
         raspicamcontrol_check_configuration(128);
+    }
 
     return exit_code;
 }
