@@ -3,14 +3,14 @@
 RASPISTILL_STATE state;
 
 /**
- *  buffer header callback function for encoder
+ *  Buffer header callback function for camera
  *
  *  Callback will dump buffer data to the specific file
  *
  * @param port Pointer to port from which callback originated
  * @param buffer mmal buffer header pointer
  */
-static void my_encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
+static void camera_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
     int complete = 0;
 
@@ -20,7 +20,7 @@ static void my_encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *
 
     if (pData)
     {
-        int bytes_written = buffer->length;
+        uint32_t bytes_written = buffer->length;
 
         if (buffer->length && pData->file_handle)
         {
@@ -39,12 +39,13 @@ static void my_encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *
         }
 
         // Now flag if we have completed
-        if (buffer->flags & (MMAL_BUFFER_HEADER_FLAG_FRAME_END | MMAL_BUFFER_HEADER_FLAG_TRANSMISSION_FAILED))
+        if (buffer->flags & (MMAL_BUFFER_HEADER_FLAG_FRAME_END | MMAL_BUFFER_HEADER_FLAG_TRANSMISSION_FAILED)) {
             complete = 1;
+        }
     }
     else
     {
-        vcos_log_error("Received a encoder buffer callback with no state");
+        vcos_log_error("Received a camera buffer callback with no state");
     }
 
     // release buffer back to the pool
@@ -63,11 +64,12 @@ static void my_encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *
             status = mmal_port_send_buffer(port, new_buffer);
         }
         if (!new_buffer || status != MMAL_SUCCESS)
-            vcos_log_error("Unable to return a buffer to the encoder port");
+            vcos_log_error("Unable to return a buffer to the camera port");
     }
 
-    if (complete)
+    if (complete) {
         vcos_semaphore_post(&(pData->complete_semaphore));
+    }
 }
 
 /**
@@ -84,6 +86,7 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
     MMAL_ES_FORMAT_T *format;
     MMAL_PORT_T *still_port = NULL;
     MMAL_STATUS_T status;
+    MMAL_POOL_T *pool;
 
     /* Create the component */
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera);
@@ -169,6 +172,7 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
                                                };
         mmal_port_parameter_set(still_port, &fps_range.hdr);
     }
+
     // Set our stills format on the stills (for encoder) port
     format->encoding = MMAL_ENCODING_OPAQUE;
     format->es->video.width = VCOS_ALIGN_UP(state->common_settings.width, 32);
@@ -182,29 +186,29 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
 
     status = mmal_port_format_commit(still_port);
 
-    if (status != MMAL_SUCCESS)
-    {
+    if (status != MMAL_SUCCESS) {
         vcos_log_error("camera still format couldn't be set");
         goto error;
     }
 
+    still_port->buffer_size = still_port->buffer_size_recommended;
+
     /* Ensure there are enough buffers to avoid dropping frames */
-    if (still_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM)
+    if (still_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM) {
         still_port->buffer_num = VIDEO_OUTPUT_BUFFERS_NUM;
-
-    /* Enable component */
-    status = mmal_component_enable(camera);
-
-    if (status != MMAL_SUCCESS)
-    {
-        vcos_log_error("camera component couldn't be enabled");
-        goto error;
     }
 
-    state->camera_component = camera;
+    /* Create pool of buffer headers for the output port to consume */
+    pool = mmal_port_pool_create(still_port, still_port->buffer_num, still_port->buffer_size);
 
-    if (state->common_settings.verbose)
-        fprintf(stderr, "Camera component done\n");
+    if (!pool)
+    {
+       vcos_log_error("Failed to create buffer header pool for camera output port %s", still_port->name);
+    }
+
+    state->encoder_pool = pool;
+
+    state->camera_component = camera;
 
     return status;
 
@@ -233,8 +237,6 @@ int raspi_exposure(long exposure, int iso)
 
     MMAL_STATUS_T status = MMAL_SUCCESS;
     MMAL_PORT_T *camera_still_port = NULL;
-    MMAL_PORT_T *encoder_input_port = NULL;
-    MMAL_PORT_T *encoder_output_port = NULL;
 
     bcm_host_init();
 
@@ -269,33 +271,24 @@ int raspi_exposure(long exposure, int iso)
         vcos_log_error("%s: Failed to create camera component", __func__);
         exit_code = EX_SOFTWARE;
     }
-    else if ((status = create_encoder_component(&state)) != MMAL_SUCCESS)
-    {
-        vcos_log_error("%s: Failed to create encode component", __func__);
-        raspipreview_destroy(&state.preview_parameters);
-        destroy_camera_component(&state);
-        exit_code = EX_SOFTWARE;
-    }
     else
     {
         PORT_USERDATA callback_data;
 
         camera_still_port   = state.camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
-        encoder_input_port  = state.encoder_component->input[0];
-        encoder_output_port = state.encoder_component->output[0];
+
+        /* Enable component */
+        status = mmal_component_enable(state.camera_component);
+
+        if (status != MMAL_SUCCESS)
+        {
+            vcos_log_error("camera component couldn't be enabled");
+            goto error;
+        }
 
         if (status == MMAL_SUCCESS)
         {
             VCOS_STATUS_T vcos_status;
-
-            // Now connect the camera to the encoder
-            status = connect_ports(camera_still_port, encoder_input_port, &state.encoder_connection);
-
-            if (status != MMAL_SUCCESS)
-            {
-                vcos_log_error("%s: Failed to connect camera video port to encoder input", __func__);
-                goto error;
-            }
 
             // Set up our userdata - this is passed though to the callback where we need the information.
             // Null until we open our filename
@@ -316,9 +309,7 @@ int raspi_exposure(long exposure, int iso)
             }
             callback_data.file_handle = output_file;
 
-            int num, q;
-
-            mmal_port_parameter_set_boolean(state.encoder_component->output[0], MMAL_PARAMETER_EXIF_DISABLE, 1);
+            unsigned int num, q;
 
             if (mmal_port_parameter_set_boolean(camera_still_port, MMAL_PARAMETER_ENABLE_RAW_CAPTURE, 1) != MMAL_SUCCESS)
             {
@@ -329,13 +320,16 @@ int raspi_exposure(long exposure, int iso)
             if (mmal_status_to_int(mmal_port_parameter_set_uint32(state.camera_component->control, MMAL_PARAMETER_SHUTTER_SPEED, state.camera_parameters.shutter_speed)) != MMAL_SUCCESS)
                 vcos_log_error("Unable to set shutter speed");
 
-            // Enable the encoder output port
-            encoder_output_port->userdata = (struct MMAL_PORT_USERDATA_T *)&callback_data;
-
-            // Enable the encoder output port and tell it its callback function
-            status = mmal_port_enable(encoder_output_port, my_encoder_buffer_callback);
+            // Enable the camera output port and tell it its callback function
+            camera_still_port->userdata = (struct MMAL_PORT_USERDATA_T *)&callback_data;
+            status = mmal_port_enable(camera_still_port, camera_callback);
+            if (status != MMAL_SUCCESS) {
+                vcos_log_error("%s: Failed to enable camera port", __func__);
+            }
 
             // Send all the buffers to the encoder output port
+
+            encoder_pool is 0 here.
             num = mmal_queue_length(state.encoder_pool->queue);
 
             for (q=0; q<num; q++)
@@ -345,7 +339,7 @@ int raspi_exposure(long exposure, int iso)
                 if (!buffer)
                     vcos_log_error("Unable to get a required buffer %d from pool queue", q);
 
-                if (mmal_port_send_buffer(encoder_output_port, buffer)!= MMAL_SUCCESS)
+                if (mmal_port_send_buffer(camera_still_port, buffer)!= MMAL_SUCCESS)
                     vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
             }
 
@@ -364,13 +358,9 @@ int raspi_exposure(long exposure, int iso)
             // Ensure we don't die if get callback with no open file
             callback_data.file_handle = NULL;
 
-            // Disable encoder output port
-            status = mmal_port_disable(encoder_output_port);
-
             fclose(output_file);
             fprintf(stderr, "Closed output file\n");
             vcos_semaphore_delete(&callback_data.complete_semaphore);
-
         }
         else
         {
@@ -379,22 +369,10 @@ int raspi_exposure(long exposure, int iso)
         }
 
     error:
-        mmal_status_to_int(status);
-
-        // Disable all our ports that are not handled by connections
-        check_disable_port(encoder_output_port);
-
-        if (state.encoder_connection)
-            mmal_connection_destroy(state.encoder_connection);
-
-        /* Disable components */
-        if (state.encoder_component)
-            mmal_component_disable(state.encoder_component);
-
-        if (state.camera_component)
+        if (state.camera_component) {
             mmal_component_disable(state.camera_component);
+        }
 
-        destroy_encoder_component(&state);
         destroy_camera_component(&state);
     }
 
