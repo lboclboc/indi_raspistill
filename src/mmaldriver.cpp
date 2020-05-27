@@ -93,8 +93,6 @@ bool MMALDriver::initProperties()
     setDefaultPollingPeriod(500);
 
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 1000, .0001, false);
-//    PrimaryCCD.setCompressed(false);
-//    PrimaryCCD.setImageExtension("raw"); // FIXME: use FITS instead
 
     SetCCDParams(4056, 3040, 16, 1.55L, 1.55L);
 

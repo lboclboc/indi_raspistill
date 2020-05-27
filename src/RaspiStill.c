@@ -200,7 +200,6 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
 
     /* Create pool of buffer headers for the output port to consume */
     pool = mmal_port_pool_create(still_port, still_port->buffer_num, still_port->buffer_size);
-
     if (!pool)
     {
        vcos_log_error("Failed to create buffer header pool for camera output port %s", still_port->name);
@@ -266,7 +265,7 @@ int raspi_exposure(long exposure, int iso)
                         &state.common_settings.width, &state.common_settings.height);
 
     // FIXME: my_create_camera_component does not handle longer exposure than 1s
-    if ((status = create_camera_component(&state)) != MMAL_SUCCESS)
+    if ((status = my_create_camera_component(&state)) != MMAL_SUCCESS)
     {
         vcos_log_error("%s: Failed to create camera component", __func__);
         exit_code = EX_SOFTWARE;
@@ -329,7 +328,7 @@ int raspi_exposure(long exposure, int iso)
 
             // Send all the buffers to the encoder output port
 
-            encoder_pool is 0 here.
+            // FIXME: encoder_pool is 0 here.
             num = mmal_queue_length(state.encoder_pool->queue);
 
             for (q=0; q<num; q++)
