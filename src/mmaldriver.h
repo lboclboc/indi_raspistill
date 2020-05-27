@@ -19,6 +19,9 @@ protected:
     const char *getDefaultName() override;
     virtual bool initProperties() override;
     virtual bool updateProperties() override;
+    virtual bool saveConfigItems(FILE * fp) override;
+    virtual void addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip) override;
+
 
     // CCD specific functions
     virtual bool StartExposure(float duration) override;
@@ -42,6 +45,8 @@ private:
 
   float ExposureRequest { 0 };
 
+  ISwitch mIsoS[4];
+  ISwitchVectorProperty mIsoSP;
 };
 
 #endif /* _INDI_MMAL_H */

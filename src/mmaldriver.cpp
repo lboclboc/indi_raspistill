@@ -9,8 +9,10 @@
 
 #include "mmaldriver.h"
 
+#define DEFAULT_ISO 400
+
 extern "C" {
-    extern int raspi_exposure(long exposure);
+    extern int raspi_exposure(long exposure, int iso_speed);
 }
 
 MMALDriver::MMALDriver()
@@ -35,12 +37,42 @@ void MMALDriver::assert_framebuffer(INDI::CCDChip *ccd)
     LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
 }
 
+bool MMALDriver::saveConfigItems(FILE * fp)
+{
+    // ISO Settings
+    if (mIsoSP.nsp > 0) {
+        IUSaveConfigSwitch(fp, &mIsoSP);
+    }
+
+    return true;
+}
+
+void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
+{
+    INDI::CCD::addFITSKeywords(fptr, targetChip);
+
+    int status = 0;
+
+    if (mIsoSP.nsp > 0)
+    {
+        ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
+        if (onISO)
+        {
+            int isoSpeed = atoi(onISO->label);
+            if (isoSpeed > 0) {
+                fits_update_key_s(fptr, TUINT, "ISOSPEED", &isoSpeed, "ISO Speed", &status);
+            }
+        }
+    }
+}
+
 /**************************************************************************************
  * Client is asking us to establish connection to the device
  **************************************************************************************/
 bool MMALDriver::Connect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device connected successfully!");
+
     SetTimer(POLLMS);
     return true;
 }
@@ -73,7 +105,9 @@ void MMALDriver::ISGetProperties(const char * dev)
 bool MMALDriver::initProperties()
 {
     // We must ALWAYS init the properties of the parent class first
-    CCD::initProperties();
+    INDI::CCD::initProperties();
+
+    LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
 
     addDebugControl();
 
@@ -92,6 +126,13 @@ bool MMALDriver::initProperties()
 
     setDefaultPollingPeriod(500);
 
+    // ISO switches
+    IUFillSwitch(&mIsoS[0], "ISO_100", "100", ISS_OFF);
+    IUFillSwitch(&mIsoS[1], "ISO_200", "200", ISS_OFF);
+    IUFillSwitch(&mIsoS[2], "ISO_400", "400", ISS_ON);
+    IUFillSwitch(&mIsoS[3], "ISO_800", "800", ISS_OFF);
+    IUFillSwitchVector(&mIsoSP, mIsoS, 4, getDeviceName(), "CCD_ISO", "ISO", IMAGE_SETTINGS_TAB, IP_RW, ISR_1OFMANY, 60, IPS_IDLE);
+
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 1000, .0001, false);
 //    PrimaryCCD.setCompressed(false);
 //    PrimaryCCD.setImageExtension("raw"); // FIXME: use FITS instead
@@ -106,7 +147,20 @@ bool MMALDriver::initProperties()
 bool MMALDriver::updateProperties()
 {
 	// We must ALWAYS call the parent class updateProperties() first
-	CCD::updateProperties();
+    INDI::CCD::updateProperties();
+
+    LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
+
+    if (isConnected())  {
+        if (mIsoSP.nsp > 0) {
+            defineSwitch(&mIsoSP);
+        }
+    }
+    else {
+        if (mIsoSP.nsp > 0) {
+            deleteProperty(mIsoSP.name);
+        }
+    }
 
 	return true;
 }
@@ -264,7 +318,13 @@ void MMALDriver::grabImage()
 
     // Perform the actual exposure.
     // FIXME: Should be a separate thread, this thread should just be waiting.
-    raspi_exposure(ExposureRequest);
+    int isoSpeed = DEFAULT_ISO;
+    ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
+    if (onISO) {
+        isoSpeed = atoi(onISO->label);
+    }
+
+    raspi_exposure(ExposureRequest, isoSpeed);
     fprintf(stderr,"Image exposed to %s.\n", filename);
 
     FILE *fp = fopen(filename, "rb");
@@ -335,13 +395,36 @@ void MMALDriver::grabImage()
     ExposureComplete(&PrimaryCCD);
 }
 
-bool MMALDriver::ISNewSwitch(const char * dev, const char * name, ISState * states, char * names[], int n)
+bool MMALDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
 {
     LOGF_DEBUG("%s: dev=%s, name=%s", __FUNCTION__, dev, name);
 
-    // FIXME: When implementing variables here, make sure to call void MMALDriver::updateFrameBufferSize()
+    // ignore if not ours
+    if (dev != nullptr && strcmp(dev, getDeviceName()) != 0)
+        return false;
 
-	return INDI::CCD::ISNewSwitch(dev, name, states, names, n);
+    if (INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n))
+        return true;
+
+    ISwitchVectorProperty *svp = getSwitch(name);
+    if (!isConnected()) {
+         svp->s = IPS_ALERT;
+         IDSetSwitch(svp, "Cannot change property while device is disconnected.");
+         return false;
+    }
+
+    // FIXME: When implementing variables here, make sure to call void MMALDriver::updateFrameBufferSize()
+    if (!strcmp(name, mIsoSP.name))
+    {
+        if (IUUpdateSwitch(&mIsoSP, states, names, n) < 0) {
+            return false;
+        }
+
+        IDSetSwitch(&mIsoSP, nullptr);
+        return true;
+    }
+
+    return false;
 }
 
 bool MMALDriver::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)

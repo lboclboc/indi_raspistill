@@ -10,6 +10,7 @@ class IndiClient(PyIndi.BaseClient):
     def __init__(self):
         super(IndiClient, self).__init__()
         self.exposure = None
+        self.iso = None
         self.device = None
         self.done = False
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
@@ -34,6 +35,8 @@ class IndiClient(PyIndi.BaseClient):
 
             elif p.getName() == "CCD_EXPOSURE":
                 self.exposure = self.device.getNumber("CCD_EXPOSURE")
+            elif p.getName() == "CCD_ISO":
+                self.iso = self.device.getNumber("CCD_ISO")
             else:
                 print("Property : " + p.getName())
 
@@ -76,6 +79,7 @@ class IndiClient(PyIndi.BaseClient):
     def takeExposure(self):
         self.logger.info("<<<<<<<< Exposure >>>>>>>>>")
         #get current exposure time
+        print(repr(self.exposure[0]))
         self.exposure[0].value = 2
         # send new exposure time to server/device
         self.sendNewNumber(self.exposure)
@@ -91,8 +95,19 @@ if __name__ == '__main__':
          print("  indiserver indi_simulator_telescope indi_simulator_ccd")
          sys.exit(1)
 
+
     while indiclient.exposure is None:
         time.sleep(1)
+
+    device = indiclient.device
+    connection = device.getSwitch("CONNECTION")
+    connection[0].s = True
+    indiclient.sendNewSwitch(connection)
+    iso = device.getSwitch("CCD_ISO")
+    assert(iso)
+    iso[0].s = False
+    iso[2].s = True
+    indiclient.sendNewSwitch(iso)
 
     print("Taking picture")
     indiclient.takeExposure()
