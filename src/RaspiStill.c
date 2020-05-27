@@ -10,13 +10,14 @@ RASPISTILL_STATE state;
  * @param port Pointer to port from which callback originated
  * @param buffer mmal buffer header pointer
  */
-static void camera_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
+static void my_camera_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
     int complete = 0;
 
     // We pass our file handle and other stuff in via the userdata field.
 
     PORT_USERDATA *pData = (PORT_USERDATA *)port->userdata;
+fprintf(stderr,"my_camera_callbacks with buffer size %d\n", buffer->length);
 
     if (pData)
     {
@@ -39,7 +40,7 @@ static void camera_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
         }
 
         // Now flag if we have completed
-        if (buffer->flags & (MMAL_BUFFER_HEADER_FLAG_FRAME_END | MMAL_BUFFER_HEADER_FLAG_TRANSMISSION_FAILED)) {
+        if (buffer->flags & (MMAL_BUFFER_HEADER_FLAG_EOS | MMAL_BUFFER_HEADER_FLAG_FRAME_END | MMAL_BUFFER_HEADER_FLAG_TRANSMISSION_FAILED)) {
             complete = 1;
         }
     }
@@ -47,7 +48,7 @@ static void camera_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
     {
         vcos_log_error("Received a camera buffer callback with no state");
     }
-
+fprintf(stderr, "callback complete=%d, buffer flags: %d, releaseing buffer %p\n", complete, buffer->flags, (void *)buffer);
     // release buffer back to the pool
     mmal_buffer_header_release(buffer);
 
@@ -63,8 +64,13 @@ static void camera_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
         {
             status = mmal_port_send_buffer(port, new_buffer);
         }
-        if (!new_buffer || status != MMAL_SUCCESS)
+        if (!new_buffer || status != MMAL_SUCCESS) {
             vcos_log_error("Unable to return a buffer to the camera port");
+        }
+fprintf(stderr, "callback: returned buffer\n");
+    }
+    else {
+        fprintf(stderr, "callback: port not enabled\n");
     }
 
     if (complete) {
@@ -133,7 +139,7 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
             { MMAL_PARAMETER_CAMERA_CONFIG, sizeof(cam_config) },
             .max_stills_w = state->common_settings.width,
             .max_stills_h = state->common_settings.height,
-            .stills_yuv422 = 0,
+            .stills_yuv422 = 1,
             .one_shot_stills = 1,
             .max_preview_video_w = state->preview_parameters.previewWindow.width,
             .max_preview_video_h = state->preview_parameters.previewWindow.height,
@@ -150,6 +156,7 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
         }
 
         mmal_port_parameter_set(camera->control, &cam_config.hdr);
+fprintf(stderr, "Size set to %dx%d\n", cam_config.max_stills_w, cam_config.max_stills_h);
     }
 
     raspicamcontrol_set_all_parameters(camera, &state->camera_parameters);
@@ -175,6 +182,7 @@ static MMAL_STATUS_T my_create_camera_component(RASPISTILL_STATE *state)
 
     // Set our stills format on the stills (for encoder) port
     format->encoding = MMAL_ENCODING_OPAQUE;
+    format->encoding_variant = MMAL_ENCODING_I420;
     format->es->video.width = VCOS_ALIGN_UP(state->common_settings.width, 32);
     format->es->video.height = VCOS_ALIGN_UP(state->common_settings.height, 16);
     format->es->video.crop.x = 0;
@@ -234,13 +242,17 @@ int raspi_exposure(long exposure, int iso)
     char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
     int exit_code = EX_OK;
 
+fprintf(stderr, "raspi_exposure called\n");
+
     MMAL_STATUS_T status = MMAL_SUCCESS;
     MMAL_PORT_T *camera_still_port = NULL;
 
     bcm_host_init();
+fprintf(stderr, "bcm_host_init done\n");
 
     // Register our application with the logging system
     vcos_log_register("RaspiStill", VCOS_LOG_CATEGORY);
+fprintf(stderr, "vcos_log_register done\n");
 
     signal(SIGINT, default_signal_handler);
 
@@ -248,7 +260,9 @@ int raspi_exposure(long exposure, int iso)
     signal(SIGUSR1, SIG_IGN);
     signal(SIGUSR2, SIG_IGN);
 
+
     default_status(&state);
+fprintf(stderr, "default_status done\n");
 
     state.preview_parameters.wantPreview = 0;
     state.timeout = 1;
@@ -264,6 +278,7 @@ int raspi_exposure(long exposure, int iso)
     get_sensor_defaults(state.common_settings.cameraNum, state.common_settings.camera_name,
                         &state.common_settings.width, &state.common_settings.height);
 
+fprintf(stderr, "get_sensor_defaults done\n");
     // FIXME: my_create_camera_component does not handle longer exposure than 1s
     if ((status = my_create_camera_component(&state)) != MMAL_SUCCESS)
     {
@@ -273,17 +288,27 @@ int raspi_exposure(long exposure, int iso)
     else
     {
         PORT_USERDATA callback_data;
+        VCOS_STATUS_T vcos_status;
+
+        // Set up our userdata - this is passed though to the callback where we need the information.
+        // Null until we open our filename
+        callback_data.file_handle = NULL;
+        callback_data.pstate = &state;
+        vcos_status = vcos_semaphore_create(&callback_data.complete_semaphore, "RaspiStill-sem", 0);
+        vcos_assert(vcos_status == VCOS_SUCCESS);
+
+fprintf(stderr, "my_create_camera_component done\n");
 
         camera_still_port   = state.camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
 
         /* Enable component */
         status = mmal_component_enable(state.camera_component);
-
         if (status != MMAL_SUCCESS)
         {
             vcos_log_error("camera component couldn't be enabled");
             goto error;
         }
+        fprintf(stderr, "camera enabled\n");
 
         if (status == MMAL_SUCCESS)
         {
@@ -294,6 +319,7 @@ int raspi_exposure(long exposure, int iso)
             callback_data.file_handle = NULL;
             callback_data.pstate = &state;
             vcos_status = vcos_semaphore_create(&callback_data.complete_semaphore, "RaspiStill-sem", 0);
+fprintf(stderr, "vcos_semaphore_create done\n");
 
             vcos_assert(vcos_status == VCOS_SUCCESS);
 
@@ -314,6 +340,7 @@ int raspi_exposure(long exposure, int iso)
             {
                 vcos_log_error("RAW was requested, but failed to enable");
             }
+fprintf(stderr, "mmal_port_parameter_set_boolean done\n");
 
             // There is a possibility that shutter needs to be set each loop.
             if (mmal_status_to_int(mmal_port_parameter_set_uint32(state.camera_component->control, MMAL_PARAMETER_SHUTTER_SPEED, state.camera_parameters.shutter_speed)) != MMAL_SUCCESS)
@@ -321,7 +348,7 @@ int raspi_exposure(long exposure, int iso)
 
             // Enable the camera output port and tell it its callback function
             camera_still_port->userdata = (struct MMAL_PORT_USERDATA_T *)&callback_data;
-            status = mmal_port_enable(camera_still_port, camera_callback);
+            status = mmal_port_enable(camera_still_port, my_camera_callback);
             if (status != MMAL_SUCCESS) {
                 vcos_log_error("%s: Failed to enable camera port", __func__);
             }
@@ -330,7 +357,7 @@ int raspi_exposure(long exposure, int iso)
 
             // FIXME: encoder_pool is 0 here.
             num = mmal_queue_length(state.encoder_pool->queue);
-
+fprintf(stderr, "mmal_queue_length done. num=%d\n", num);
             for (q=0; q<num; q++)
             {
                 MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(state.encoder_pool->queue);
@@ -341,17 +368,19 @@ int raspi_exposure(long exposure, int iso)
                 if (mmal_port_send_buffer(camera_still_port, buffer)!= MMAL_SUCCESS)
                     vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
             }
-
+fprintf(stderr, "mmal_port_send_buffer done\n");
             if (mmal_port_parameter_set_boolean(camera_still_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS)
             {
                 vcos_log_error("%s: Failed to start capture", __func__);
             }
             else
             {
+                fprintf(stderr, "mmal_port_parameter_set_boolean done\n");
                 // Wait for capture to complete
                 // For some reason using vcos_semaphore_wait_timeout sometimes returns immediately with bad parameter error
                 // even though it appears to be all correct, so reverting to untimed one until figure out why its erratic
                 vcos_semaphore_wait(&callback_data.complete_semaphore);
+fprintf(stderr, "vcos_semaphore_wait done\n");
             }
 
             // Ensure we don't die if get callback with no open file
@@ -360,6 +389,7 @@ int raspi_exposure(long exposure, int iso)
             fclose(output_file);
             fprintf(stderr, "Closed output file\n");
             vcos_semaphore_delete(&callback_data.complete_semaphore);
+fprintf(stderr, "vcos_semaphore_delete done\n");
         }
         else
         {
