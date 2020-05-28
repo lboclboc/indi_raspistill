@@ -32,7 +32,7 @@ protected:
 
 private:
   // Utility functions
-  float CalcTimeLeft();
+  double CalcTimeLeft();
   void setupParams();
   void grabImage();
   void updateFrameBufferSize();
@@ -43,10 +43,15 @@ private:
   // Struct to keep timing
   struct timeval ExpStart { 0, 0 };
 
-  float ExposureRequest { 0 };
-
+  double ExposureRequest { 0 };
+#ifdef USE_ISO
   ISwitch mIsoS[4];
   ISwitchVectorProperty mIsoSP;
+#endif
+#ifdef USE_GAIN
+  INumber mGainN[5];
+  INumberVectorProperty mGainNP;
+#endif
 };
 
 #endif /* _INDI_MMAL_H */

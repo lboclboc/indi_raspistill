@@ -106,7 +106,9 @@ if __name__ == '__main__':
     iso = device.getSwitch("CCD_ISO")
     assert(iso)
     iso[0].s = False
-    iso[2].s = True
+    iso[1].s = False
+    iso[2].s = False
+    iso[3].s = True
     indiclient.sendNewSwitch(iso)
 
     print("Taking picture")

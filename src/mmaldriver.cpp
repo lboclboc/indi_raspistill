@@ -7,12 +7,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#undef USE_ISO      // ISO does not really work when using RAW-mode on Hi Quality RPI cam.
+#define USE_GAIN    // Works in raw mode.
+
+#ifdef USE_ISO
+#define DEFAULT_ISO 400
+#endif
+
 #include "mmaldriver.h"
 
-#define DEFAULT_ISO 400
-
 extern "C" {
-    extern int raspi_exposure(long exposure, int iso_speed);
+    extern int raspi_exposure(double exposure, int iso_speed, float gain);
 }
 
 MMALDriver::MMALDriver()
@@ -39,10 +44,18 @@ void MMALDriver::assert_framebuffer(INDI::CCDChip *ccd)
 
 bool MMALDriver::saveConfigItems(FILE * fp)
 {
+    INDI::CCD::saveConfigItems(fp);
+
+#ifdef USE_ISO
     // ISO Settings
     if (mIsoSP.nsp > 0) {
         IUSaveConfigSwitch(fp, &mIsoSP);
     }
+#endif
+#ifdef USE_GAIN
+    // Gain Settings
+    IUSaveConfigNumber(fp, &mGainNP);
+#endif
 
     return true;
 }
@@ -51,8 +64,7 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
 {
     INDI::CCD::addFITSKeywords(fptr, targetChip);
 
-    int status = 0;
-
+#ifdef USE_ISO
     if (mIsoSP.nsp > 0)
     {
         ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
@@ -64,6 +76,8 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
             }
         }
     }
+#endif
+
 }
 
 /**************************************************************************************
@@ -107,6 +121,8 @@ bool MMALDriver::initProperties()
     // We must ALWAYS init the properties of the parent class first
     INDI::CCD::initProperties();
 
+// FIXME: Use defined constant.    IUSaveText(&BayerT[2], "BGGR");
+
     LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
 
     addDebugControl();
@@ -127,18 +143,28 @@ bool MMALDriver::initProperties()
     setDefaultPollingPeriod(500);
 
     // ISO switches
+#ifdef USE_ISO
     IUFillSwitch(&mIsoS[0], "ISO_100", "100", ISS_OFF);
     IUFillSwitch(&mIsoS[1], "ISO_200", "200", ISS_OFF);
     IUFillSwitch(&mIsoS[2], "ISO_400", "400", ISS_ON);
     IUFillSwitch(&mIsoS[3], "ISO_800", "800", ISS_OFF);
     IUFillSwitchVector(&mIsoSP, mIsoS, 4, getDeviceName(), "CCD_ISO", "ISO", IMAGE_SETTINGS_TAB, IP_RW, ISR_1OFMANY, 60, IPS_IDLE);
+#endif
+
+#ifdef USE_GAIN
+    // CCD Gain
+    IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1);
+    fprintf(stderr, "DeviceName: %.10s\n", getDeviceName()); fflush(stdout);
+    fprintf(stderr, "MAIN_CONTROL_TAB: %.10s\n",MAIN_CONTROL_TAB); fflush(stdout);
+    IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
+#endif
 
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 1000, .0001, false);
+
 //    PrimaryCCD.setCompressed(false);
-//    PrimaryCCD.setImageExtension("raw"); // FIXME: use FITS instead
 
-    SetCCDParams(4056, 3040, 16, 1.55L, 1.55L);
-
+    // FIXME: Ask camera about sizes instead of hardcode.
+    SetCCDParams(4056, 3040, 16, 1.55F, 1.55F);
     UpdateCCDFrame(0, 0, 4056, 3040);
 
     return true;
@@ -152,14 +178,24 @@ bool MMALDriver::updateProperties()
     LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
 
     if (isConnected())  {
+#ifdef USE_ISO
         if (mIsoSP.nsp > 0) {
             defineSwitch(&mIsoSP);
         }
+#endif
+#ifdef USE_GAIN
+        defineNumber(&mGainNP);
+#endif
     }
     else {
+#ifdef USE_ISO
         if (mIsoSP.nsp > 0) {
             deleteProperty(mIsoSP.name);
         }
+#endif
+#ifdef USE_GAIN
+        deleteProperty(mGainNP.name);
+#endif
     }
 
 	return true;
@@ -210,12 +246,12 @@ bool MMALDriver::StartExposure(float duration)
         return false;
     }
 
-    LOGF_DEBUG("StartEposure(%f)", duration);
+    LOGF_DEBUG("StartEposure(%f)", static_cast<double>(duration));
 
-    ExposureRequest = duration;
+    ExposureRequest = static_cast<double>(duration);
 
     // Since we have only have one CCD with one chip, we set the exposure duration of the primary CCD
-    PrimaryCCD.setExposureDuration(duration);
+    PrimaryCCD.setExposureDuration(static_cast<double>(duration));
 
     gettimeofday(&ExpStart, nullptr);
 
@@ -240,15 +276,15 @@ bool MMALDriver::AbortExposure()
 /**************************************************************************************
  * How much longer until exposure is done?
  **************************************************************************************/
-float MMALDriver::CalcTimeLeft()
+double MMALDriver::CalcTimeLeft()
 {
     double timesince;
     double timeleft;
     struct timeval now { 0, 0 };
     gettimeofday(&now, nullptr);
 
-    timesince = (double)(now.tv_sec * 1000.0 + now.tv_usec / 1000) -
-                (double)(ExpStart.tv_sec * 1000.0 + ExpStart.tv_usec / 1000);
+    timesince = static_cast<double>(now.tv_sec * 1000.0 + now.tv_usec / 1000) -
+                static_cast<double>(ExpStart.tv_sec * 1000.0 + ExpStart.tv_usec / 1000);
     timesince = timesince / 1000;
 
     timeleft = ExposureRequest - timesince;
@@ -273,7 +309,7 @@ void MMALDriver::TimerHit()
 
     if (InExposure)
     {
-        float timeleft = CalcTimeLeft();
+        double timeleft = CalcTimeLeft();
         if (timeleft < 0)
             timeleft = 0;
 
@@ -299,7 +335,7 @@ void MMALDriver::TimerHit()
 				grabImage();
             }
             else {
-                nextTimer = timeleft * 1000;
+                nextTimer = static_cast<uint32_t>(timeleft * 1000);
             }
         }
     }
@@ -318,13 +354,20 @@ void MMALDriver::grabImage()
 
     // Perform the actual exposure.
     // FIXME: Should be a separate thread, this thread should just be waiting.
-    int isoSpeed = DEFAULT_ISO;
+
+    int isoSpeed = 0;
+#ifdef USE_ISO
+    isoSpeed = DEFAULT_ISO;
     ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
     if (onISO) {
         isoSpeed = atoi(onISO->label);
     }
-
-    raspi_exposure(ExposureRequest, isoSpeed);
+#endif
+    double gain = 1;
+#ifdef USE_GAIN
+    gain = mGainN[0].value;
+#endif
+    raspi_exposure(ExposureRequest, isoSpeed, static_cast<float>(gain));
     fprintf(stderr,"Image exposed to %s.\n", filename);
 
     FILE *fp = fopen(filename, "rb");
@@ -385,7 +428,7 @@ void MMALDriver::grabImage()
         }
     }
     fclose(fp);
-    unlink(filename);
+    // FIXME: unlink(filename);
 
     guard.unlock();
 
@@ -414,6 +457,7 @@ bool MMALDriver::ISNewSwitch(const char *dev, const char *name, ISState *states,
     }
 
     // FIXME: When implementing variables here, make sure to call void MMALDriver::updateFrameBufferSize()
+#ifdef USE_ISO
     if (!strcmp(name, mIsoSP.name))
     {
         if (IUUpdateSwitch(&mIsoSP, states, names, n) < 0) {
@@ -423,6 +467,7 @@ bool MMALDriver::ISNewSwitch(const char *dev, const char *name, ISState *states,
         IDSetSwitch(&mIsoSP, nullptr);
         return true;
     }
+#endif
 
     return false;
 }
@@ -431,7 +476,25 @@ bool MMALDriver::ISNewNumber(const char *dev, const char *name, double values[],
 {
     LOGF_DEBUG("%s: dev=%s, name=%s", __FUNCTION__, dev, name);
 
-    return INDI::CCD::ISNewNumber(dev, name, values, names, n);
+    // ignore if not ours
+    if (dev != nullptr && strcmp(dev, getDeviceName()) != 0)
+        return false;
+
+    if (INDI::CCD::ISNewNumber(dev, name, values, names, n)) {
+        return true;
+    }
+
+#ifdef USE_GAIN
+    if (!strcmp(name, mGainNP.name))
+    {
+        IUUpdateNumber(&mGainNP, values, names, n);
+        mGainNP.s = IPS_OK;
+        IDSetNumber(&mGainNP, nullptr);
+        return true;
+    }
+#endif
+
+    return false;
 }
 
 bool MMALDriver::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)

@@ -1,6 +1,6 @@
 #include "RaspiStill-fixed.c"
 
-RASPISTILL_STATE state;
+//RASPISTILL_STATE state;
 
 /**
  *  buffer header callback function for encoder
@@ -20,7 +20,7 @@ static void my_encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *
 
     if (pData)
     {
-        int bytes_written = buffer->length;
+        uint32_t bytes_written = buffer->length;
 
         if (buffer->length && pData->file_handle)
         {
@@ -70,10 +70,11 @@ static void my_encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *
         vcos_semaphore_post(&(pData->complete_semaphore));
 }
 
-int raspi_exposure(long exposure, int iso_speed)
+int raspi_exposure(double exposure, int iso_speed, float gain)
 {
     // Our main data storage vessel..
     char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
+    RASPISTILL_STATE state;
 
     int exit_code = EX_OK;
 
@@ -96,12 +97,14 @@ int raspi_exposure(long exposure, int iso_speed)
     signal(SIGUSR2, SIG_IGN);
 
     default_status(&state);
+    state.frameNextMethod = FRAME_NEXT_SINGLE;
     state.wantRAW = true;
     state.preview_parameters.wantPreview = 0;
     state.timeout = 1;
-    state.common_settings.verbose = 1;
-    state.camera_parameters.shutter_speed = exposure * 1000000L;
+    state.common_settings.verbose = 0;
+    state.camera_parameters.shutter_speed = (int)(exposure * 1000000L);
     state.camera_parameters.ISO = iso_speed;
+    state.camera_parameters.analog_gain = gain;
 
     if (state.timeout == -1)
         state.timeout = 5000;
@@ -109,11 +112,6 @@ int raspi_exposure(long exposure, int iso_speed)
     // Setup for sensor specific parameters
     get_sensor_defaults(state.common_settings.cameraNum, state.common_settings.camera_name,
                         &state.common_settings.width, &state.common_settings.height);
-
-    // OK, we have a nice set of parameters. Now set up our components
-    // We have three components. Camera, Preview and encoder.
-    // Camera and encoder are different in stills/video, but preview
-    // is the same so handed off to a separate module
 
     // FIXME: my_create_camera_component does not handle longer exposure than 1s
     if ((status = create_camera_component(&state)) != MMAL_SUCCESS)
@@ -169,11 +167,9 @@ int raspi_exposure(long exposure, int iso_speed)
 
             vcos_assert(vcos_status == VCOS_SUCCESS);
 
+            sleep(2);
 
             FILE *output_file = NULL;
-
-            state.frameNextMethod = FRAME_NEXT_IMMEDIATELY;
-
 
             // Open the file
             output_file = fopen(filename, "wb");
@@ -184,17 +180,22 @@ int raspi_exposure(long exposure, int iso_speed)
             }
             callback_data.file_handle = output_file;
 
-            int num, q;
+            uint32_t num, q;
 
             mmal_port_parameter_set_boolean(state.encoder_component->output[0], MMAL_PARAMETER_EXIF_DISABLE, 1);
 
-            if (mmal_port_parameter_set_boolean(camera_still_port, MMAL_PARAMETER_ENABLE_RAW_CAPTURE, 1) != MMAL_SUCCESS)
+            // Same with raw, apparently need to set it for each capture, whilst port
+            // is not enabled
+            if (state.wantRAW)
             {
-                vcos_log_error("RAW was requested, but failed to enable");
+                if (mmal_port_parameter_set_boolean(camera_still_port, MMAL_PARAMETER_ENABLE_RAW_CAPTURE, 1) != MMAL_SUCCESS)
+                {
+                    vcos_log_error("RAW was requested, but failed to enable");
+                }
             }
 
             // There is a possibility that shutter needs to be set each loop.
-            if (mmal_status_to_int(mmal_port_parameter_set_uint32(state.camera_component->control, MMAL_PARAMETER_SHUTTER_SPEED, state.camera_parameters.shutter_speed)) != MMAL_SUCCESS)
+            if (mmal_status_to_int(mmal_port_parameter_set_uint32(state.camera_component->control, MMAL_PARAMETER_SHUTTER_SPEED, (uint32_t)state.camera_parameters.shutter_speed)) != MMAL_SUCCESS)
                 vcos_log_error("Unable to set shutter speed");
 
             // Enable the encoder output port
@@ -204,7 +205,7 @@ int raspi_exposure(long exposure, int iso_speed)
                 fprintf(stderr, "Enabling encoder output port\n");
 
             // Enable the encoder output port and tell it its callback function
-            status = mmal_port_enable(encoder_output_port, my_encoder_buffer_callback);
+            status = mmal_port_enable(encoder_output_port, encoder_buffer_callback);
 
             // Send all the buffers to the encoder output port
             num = mmal_queue_length(state.encoder_pool->queue);
@@ -219,6 +220,16 @@ int raspi_exposure(long exposure, int iso_speed)
                 if (mmal_port_send_buffer(encoder_output_port, buffer)!= MMAL_SUCCESS)
                     vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
             }
+iso_speed = -1;
+mmal_port_parameter_get_int32(state.camera_component->control, MMAL_PARAMETER_ISO, &iso_speed);
+fprintf(stderr, "Calling capture. verbose=%d, iso=%d, gain=%f\n", state.common_settings.verbose, iso_speed, (double)state.camera_parameters.analog_gain);
+/*
+MMAL_PARAMETER_EXPOSUREMODE_T exp_mode = {{MMAL_PARAMETER_EXPOSURE_MODE,sizeof(exp_mode)}, MMAL_PARAM_EXPOSUREMODE_OFF};
+mmal_status_to_int(mmal_port_parameter_set(state.camera_component->control, &exp_mode.hdr));
+fprintf(stderr, "Exposure mode: %d\n", exp_mode.value);
+*/
+dump_status(&state);
+
 
             if (mmal_port_parameter_set_boolean(camera_still_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS)
             {
