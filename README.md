@@ -22,3 +22,4 @@ Pixels are ordered by | Bm | Gm | Bl+Gl |
                       | Gm | Rm | Gl+Rl |
 
 m : MSB 8 bits, l = LSB 4 bits
+

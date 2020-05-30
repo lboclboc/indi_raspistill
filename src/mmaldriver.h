@@ -49,7 +49,7 @@ private:
   ISwitchVectorProperty mIsoSP;
 #endif
 #ifdef USE_GAIN
-  INumber mGainN[5];
+  INumber mGainN[1];
   INumberVectorProperty mGainNP;
 #endif
 };

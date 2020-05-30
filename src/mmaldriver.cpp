@@ -118,6 +118,7 @@ void MMALDriver::ISGetProperties(const char * dev)
 
 bool MMALDriver::initProperties()
 {
+    sleep(4);
     // We must ALWAYS init the properties of the parent class first
     INDI::CCD::initProperties();
 
@@ -224,7 +225,10 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
     }
 
     // Let's calculate how much memory we need for the primary CCD buffer
-    int nbuf = (PrimaryCCD.getXRes() * PrimaryCCD.getYRes() * (PrimaryCCD.getBPP() / 8));
+    int xRes = PrimaryCCD.getXRes();
+    int yRes = PrimaryCCD.getYRes();
+    int bpp = PrimaryCCD.getBPP();
+    int nbuf = (xRes * yRes * (bpp / 8));
 
     LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
 

@@ -76,20 +76,20 @@ ExternalProject_Add(userland
   PATCH_COMMAND     ${PROJECT_SOURCE_DIR}/scripts/patch_raspistill.sh ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill.c
                         ${USERLAND_SRC}/host_applications/linux/apps/raspicam/RaspiStill-fixed.c &&
                     ${CMAKE_COMMAND} -E echo "Patched RaspiStill.c"
-  INSTALL_COMMAND ""
+  INSTALL_COMMAND   ""
 )
 
-get_target_property(value userland SOURCE_DIR)
-message("userland value:" ${value})
-get_target_property(value userland BINARY_DIR)
-message("userland value:" ${value})
+#get_target_property(value userland SOURCE_DIR)
+#message("userland value:" ${value})
+#get_target_property(value userland BINARY_DIR)
+#message("userland value:" ${value})
 
 
 add_executable(indi_raspistill ${indi_raspistill_SRCS})
 
 target_link_libraries(indi_raspistill ${INDI_DRIVER_LIBRARIES} ${CFITSIO_LIBRARIES} ${INDI_LIBRARIES} ${USERLAND_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 
-add_dependencies(indi_raspistill userland)
+#add_dependencies(indi_raspistill userland)
 
 install(TARGETS indi_raspistill RUNTIME DESTINATION bin )
 install(FILES indi_raspistill.xml DESTINATION ${INDI_DATA_DIR})
