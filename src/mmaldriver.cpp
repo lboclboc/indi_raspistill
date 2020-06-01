@@ -118,7 +118,7 @@ void MMALDriver::ISGetProperties(const char * dev)
 
 bool MMALDriver::initProperties()
 {
-    sleep(4);
+
     // We must ALWAYS init the properties of the parent class first
     INDI::CCD::initProperties();
 
@@ -154,9 +154,12 @@ bool MMALDriver::initProperties()
 
 #ifdef USE_GAIN
     // CCD Gain
-    IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1);
+    IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1); // FIXME: this overwride this->deviceID
     fprintf(stderr, "DeviceName: %.10s\n", getDeviceName()); fflush(stdout);
     fprintf(stderr, "MAIN_CONTROL_TAB: %.10s\n",MAIN_CONTROL_TAB); fflush(stdout);
+    size_t sz = sizeof(mGainNP);
+    fprintf(stderr, "Size: %d\n", sz); fflush(stdout);
+
     IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
 #endif
 

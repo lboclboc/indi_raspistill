@@ -64,6 +64,7 @@ set(indi_raspistill_SRCS
    ${CMAKE_SOURCE_DIR}/src/RaspiStill.c
    ${CMAKE_SOURCE_DIR}/src/indi_mmal.cpp
    ${CMAKE_SOURCE_DIR}/src/mmaldriver.cpp
+#   ${CMAKE_SOURCE_DIR}/src/main.c
 )
 
 set(USERLAND_LIBRARIES raspilib libuserland)
