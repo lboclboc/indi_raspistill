@@ -23,6 +23,7 @@ extern "C" {
 MMALDriver::MMALDriver()
 {
     setVersion(1, 0);
+    fprintf(stderr, "Size of MMALDriver: %d\n", sizeof(MMALDriver)); fflush(stderr);
 }
 
 MMALDriver::~MMALDriver()
@@ -64,7 +65,7 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
 {
     INDI::CCD::addFITSKeywords(fptr, targetChip);
 
-#ifdef USE_ISO
+#ifdef USE_ISOx // FIXME
     if (mIsoSP.nsp > 0)
     {
         ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
@@ -122,6 +123,26 @@ bool MMALDriver::initProperties()
     // We must ALWAYS init the properties of the parent class first
     INDI::CCD::initProperties();
 
+    // ISO switches
+#ifdef USE_ISO
+    IUFillSwitch(&mIsoS[0], "ISO_100", "100", ISS_OFF);
+    IUFillSwitch(&mIsoS[1], "ISO_200", "200", ISS_OFF);
+    IUFillSwitch(&mIsoS[2], "ISO_400", "400", ISS_ON);
+    IUFillSwitch(&mIsoS[3], "ISO_800", "800", ISS_OFF);
+    IUFillSwitchVector(&mIsoSP, mIsoS, 4, getDeviceName(), "CCD_ISO", "ISO", IMAGE_SETTINGS_TAB, IP_RW, ISR_1OFMANY, 60, IPS_IDLE);
+#endif
+
+#ifdef USE_GAIN
+    // CCD Gain
+    IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1);
+    fprintf(stderr, "DeviceName: %.10s\n", getDeviceName()); fflush(stdout);
+    fprintf(stderr, "MAIN_CONTROL_TAB: %.10s\n",MAIN_CONTROL_TAB); fflush(stdout);
+    size_t sz = sizeof(mGainNP);
+    fprintf(stderr, "Size: %d\n", sz); fflush(stdout);
+
+    IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
+#endif
+
 // FIXME: Use defined constant.    IUSaveText(&BayerT[2], "BGGR");
 
     LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
@@ -143,25 +164,7 @@ bool MMALDriver::initProperties()
 
     setDefaultPollingPeriod(500);
 
-    // ISO switches
-#ifdef USE_ISO
-    IUFillSwitch(&mIsoS[0], "ISO_100", "100", ISS_OFF);
-    IUFillSwitch(&mIsoS[1], "ISO_200", "200", ISS_OFF);
-    IUFillSwitch(&mIsoS[2], "ISO_400", "400", ISS_ON);
-    IUFillSwitch(&mIsoS[3], "ISO_800", "800", ISS_OFF);
-    IUFillSwitchVector(&mIsoSP, mIsoS, 4, getDeviceName(), "CCD_ISO", "ISO", IMAGE_SETTINGS_TAB, IP_RW, ISR_1OFMANY, 60, IPS_IDLE);
-#endif
 
-#ifdef USE_GAIN
-    // CCD Gain
-    IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1); // FIXME: this overwride this->deviceID
-    fprintf(stderr, "DeviceName: %.10s\n", getDeviceName()); fflush(stdout);
-    fprintf(stderr, "MAIN_CONTROL_TAB: %.10s\n",MAIN_CONTROL_TAB); fflush(stdout);
-    size_t sz = sizeof(mGainNP);
-    fprintf(stderr, "Size: %d\n", sz); fflush(stdout);
-
-    IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
-#endif
 
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 1000, .0001, false);
 
