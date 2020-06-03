@@ -113,7 +113,6 @@ int raspi_exposure(double exposure, int iso_speed, float gain)
     get_sensor_defaults(state.common_settings.cameraNum, state.common_settings.camera_name,
                         &state.common_settings.width, &state.common_settings.height);
 
-    // FIXME: my_create_camera_component does not handle longer exposure than 1s
     if ((status = create_camera_component(&state)) != MMAL_SUCCESS)
     {
         vcos_log_error("%s: Failed to create camera component", __func__);

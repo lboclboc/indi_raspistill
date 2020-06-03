@@ -7,23 +7,15 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#undef USE_ISO      // ISO does not really work when using RAW-mode on Hi Quality RPI cam.
-#define USE_GAIN    // Works in raw mode.
-
-#ifdef USE_ISO
-#define DEFAULT_ISO 400
-#endif
-
 #include "mmaldriver.h"
 
 extern "C" {
     extern int raspi_exposure(double exposure, int iso_speed, float gain);
 }
 
-MMALDriver::MMALDriver()
+MMALDriver::MMALDriver() : INDI::CCD()
 {
     setVersion(1, 0);
-    fprintf(stderr, "Size of MMALDriver: %d\n", sizeof(MMALDriver)); fflush(stderr);
 }
 
 MMALDriver::~MMALDriver()
@@ -53,10 +45,9 @@ bool MMALDriver::saveConfigItems(FILE * fp)
         IUSaveConfigSwitch(fp, &mIsoSP);
     }
 #endif
-#ifdef USE_GAIN
+
     // Gain Settings
     IUSaveConfigNumber(fp, &mGainNP);
-#endif
 
     return true;
 }
@@ -119,7 +110,6 @@ void MMALDriver::ISGetProperties(const char * dev)
 
 bool MMALDriver::initProperties()
 {
-
     // We must ALWAYS init the properties of the parent class first
     INDI::CCD::initProperties();
 
@@ -132,20 +122,11 @@ bool MMALDriver::initProperties()
     IUFillSwitchVector(&mIsoSP, mIsoS, 4, getDeviceName(), "CCD_ISO", "ISO", IMAGE_SETTINGS_TAB, IP_RW, ISR_1OFMANY, 60, IPS_IDLE);
 #endif
 
-#ifdef USE_GAIN
     // CCD Gain
     IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1);
-    fprintf(stderr, "DeviceName: %.10s\n", getDeviceName()); fflush(stdout);
-    fprintf(stderr, "MAIN_CONTROL_TAB: %.10s\n",MAIN_CONTROL_TAB); fflush(stdout);
-    size_t sz = sizeof(mGainNP);
-    fprintf(stderr, "Size: %d\n", sz); fflush(stdout);
-
     IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
-#endif
 
 // FIXME: Use defined constant.    IUSaveText(&BayerT[2], "BGGR");
-
-    LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
 
     addDebugControl();
 
@@ -190,9 +171,7 @@ bool MMALDriver::updateProperties()
             defineSwitch(&mIsoSP);
         }
 #endif
-#ifdef USE_GAIN
         defineNumber(&mGainNP);
-#endif
     }
     else {
 #ifdef USE_ISO
@@ -200,9 +179,8 @@ bool MMALDriver::updateProperties()
             deleteProperty(mIsoSP.name);
         }
 #endif
-#ifdef USE_GAIN
+
         deleteProperty(mGainNP.name);
-#endif
     }
 
 	return true;
@@ -279,7 +257,7 @@ bool MMALDriver::AbortExposure()
 {
 	LOGF_DEBUG("AbortEposure()", 0);
     InExposure = false;
-    // FIXME: Needs to be handled.
+    // FIXME: AbortExposure needs to be handled.
     return true;
 }
 
@@ -374,9 +352,7 @@ void MMALDriver::grabImage()
     }
 #endif
     double gain = 1;
-#ifdef USE_GAIN
     gain = mGainN[0].value;
-#endif
     raspi_exposure(ExposureRequest, isoSpeed, static_cast<float>(gain));
     fprintf(stderr,"Image exposed to %s.\n", filename);
 
@@ -438,7 +414,7 @@ void MMALDriver::grabImage()
         }
     }
     fclose(fp);
-    // FIXME: unlink(filename);
+    unlink(filename);
 
     guard.unlock();
 
@@ -494,7 +470,6 @@ bool MMALDriver::ISNewNumber(const char *dev, const char *name, double values[],
         return true;
     }
 
-#ifdef USE_GAIN
     if (!strcmp(name, mGainNP.name))
     {
         IUUpdateNumber(&mGainNP, values, names, n);
@@ -502,7 +477,6 @@ bool MMALDriver::ISNewNumber(const char *dev, const char *name, double values[],
         IDSetNumber(&mGainNP, nullptr);
         return true;
     }
-#endif
 
     return false;
 }

@@ -3,6 +3,9 @@
 
 #include <indiccd.h>
 
+#undef USE_ISO
+#define DEFAULT_ISO 400
+
 class MMALDriver : public INDI::CCD
 {
 public:
@@ -48,10 +51,9 @@ private:
   ISwitch mIsoS[4];
   ISwitchVectorProperty mIsoSP;
 #endif
-#ifdef USE_GAIN
   INumber mGainN[1];
   INumberVectorProperty mGainNP;
-#endif
 };
 
+extern std::unique_ptr<MMALDriver> mmalDevice;
 #endif /* _INDI_MMAL_H */
