@@ -9,7 +9,8 @@ set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 
 find_package(MMAL REQUIRED)
 
-message(STATUS "MMAL_LIBRARIES=${MMAL_LIBRARIES}")
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 set(indi_raspistill_SRCS
    ${CMAKE_SOURCE_DIR}/src/MMALCamera.cpp
@@ -17,4 +18,4 @@ set(indi_raspistill_SRCS
 
 add_executable(indi_raspistill ${indi_raspistill_SRCS})
 
-target_link_libraries(indi_raspistill ${MMAL_LIBRARIES})
+target_link_libraries(indi_raspistill ${MMAL_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})

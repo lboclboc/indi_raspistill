@@ -22,3 +22,8 @@ Pixels are ordered by | Bm | Gm | Bl+Gl |
                       | Gm | Rm | Gl+Rl |
 
 m : MSB 8 bits, l = LSB 4 bits
+
+Debugging
+---------
+
+Debug camera by adding dtdebug=1 to /boot/config.txt, reboot and run sudo vcdbg log assert

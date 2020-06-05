@@ -9,14 +9,14 @@ include_directories(/opt/vc/include/interface/vmcs_host/linux)
 
 link_directories(/opt/vc/lib)
 
-foreach(lib mmal_core bcm_host mmal_util mmal_vc_client brcmGLESv2 brcmEGL vcsm)
-    set(libpath)
-    find_library(libpath
+foreach(lib mmal_core bcm_host mmal_util mmal_vc_client brcmGLESv2 brcmEGL vcsm vcos)
+    find_library(${lib}_LIBRARY
                  NAMES ${lib}
                  HINTS /opt/vc/lib
     )
     if (DEFINED libpath)
-        set(MMAL_LIBRARIES ${MMAL_LIBRARIES} ${libpath})
+        message(STATUS "Adding ${${lib}_LIBRARY}")
+        set(MMAL_LIBRARIES ${MMAL_LIBRARIES} ${${lib}_LIBRARY})
     endif()
 endforeach(lib)
 
