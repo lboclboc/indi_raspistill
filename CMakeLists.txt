@@ -8,12 +8,15 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 
 find_package(MMAL REQUIRED)
+find_package(INDI REQUIRED)
+
+include_directories(${INDI_INCLUDE_DIR})
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 set(indi_raspistill_SRCS
-   ${CMAKE_SOURCE_DIR}/src/MMALCamera.cpp
+   ${CMAKE_SOURCE_DIR}/src/mmalcamera.cpp
    ${CMAKE_SOURCE_DIR}/src/indi_mmal.cpp
    ${CMAKE_SOURCE_DIR}/src/mmaldriver.cpp
 #   ${CMAKE_SOURCE_DIR}/src/main.c
@@ -24,5 +27,5 @@ add_executable(indi_raspistill ${indi_raspistill_SRCS})
 target_link_libraries(indi_raspistill ${MMAL_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 target_link_libraries(indi_raspistill ${INDI_DRIVER_LIBRARIES} ${CFITSIO_LIBRARIES} ${INDI_LIBRARIES} ${MMAL_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 
-install(TARGETS indi_raspistill RUNTIME DESTINATION bin )
-install(FILES indi_raspistill.xml DESTINATION ${INDI_DATA_DIR})
+#install(TARGETS indi_raspistill RUNTIME DESTINATION bin )
+#install(FILES indi_raspistill.xml DESTINATION ${INDI_DATA_DIR})

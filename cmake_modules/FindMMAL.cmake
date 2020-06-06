@@ -14,7 +14,7 @@ foreach(lib mmal_core bcm_host mmal_util mmal_vc_client brcmGLESv2 brcmEGL vcsm 
                  NAMES ${lib}
                  HINTS /opt/vc/lib
     )
-    if (DEFINED libpath)
+    if (DEFINED ${lib}_LIBRARY)
         message(STATUS "Adding ${${lib}_LIBRARY}")
         set(MMAL_LIBRARIES ${MMAL_LIBRARIES} ${${lib}_LIBRARY})
     endif()

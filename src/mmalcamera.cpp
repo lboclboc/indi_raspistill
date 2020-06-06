@@ -8,7 +8,7 @@
 #include <util/mmal_util_params.h>
 #include <bcm_host.h>
 
-#include "MMALCamera.h"
+#include "mmalcamera.h"
 
 MMALCamera::MMALException::MMALException(const char *text) : std::runtime_error(text)
 {

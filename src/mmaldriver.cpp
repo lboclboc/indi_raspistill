@@ -8,10 +8,7 @@
 #include <unistd.h>
 
 #include "mmaldriver.h"
-
-extern "C" {
-    extern int raspi_exposure(double exposure, int iso_speed, float gain);
-}
+#include "mmalcamera.h"
 
 MMALDriver::MMALDriver() : INDI::CCD()
 {
