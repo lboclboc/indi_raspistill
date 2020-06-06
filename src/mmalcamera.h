@@ -3,8 +3,10 @@
 
 
 class MMALCamera;
+#include <vector>
 #include <stdexcept>
 #include <mmal.h>
+#include "mmallistener.h"
 
 class MMALCamera
 {
@@ -28,8 +30,12 @@ public:
 
     int set_shutter_speed_us(long shutter_speed)  { this->shutter_speed = shutter_speed; return 0; }
     int set_iso(int iso) { this->iso = iso; return 0; }
-    int set_gain(uint32_t gain) { this->gain = gain; return 0; }
+    int set_gain(double gain) { this->gain = gain; return 0; }
     int capture();
+    uint32_t get_width() { return width; }
+    uint32_t get_height() { return height; }
+    const char *get_name() { return cameraName; }
+    void add_listener(MMALListener *l) { listeners.push_back(l); }
 
 private:
     void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
@@ -46,9 +52,10 @@ private:
     char cameraName[MMAL_PARAMETER_CAMERA_INFO_MAX_STR_LEN] {};
     uint32_t shutter_speed {100000};
     unsigned int iso {100};
-    uint32_t gain {1};
+    double gain {1};
     uint32_t width {};
     uint32_t height {};
+    std::vector<MMALListener *>listeners {};
 
     friend void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 };

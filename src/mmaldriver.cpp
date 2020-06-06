@@ -6,9 +6,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "mmaldriver.h"
-#include "mmalcamera.h"
 
 MMALDriver::MMALDriver() : INDI::CCD()
 {
@@ -53,7 +53,7 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
 {
     INDI::CCD::addFITSKeywords(fptr, targetChip);
 
-#ifdef USE_ISOx // FIXME
+#ifdef USE_ISO // FIXME
     if (mIsoSP.nsp > 0)
     {
         ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
@@ -76,7 +76,24 @@ bool MMALDriver::Connect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device connected successfully!");
 
+    camera.reset(new MMALCamera());
+
+    camera->add_listener(this);
+
     SetTimer(POLLMS);
+
+    float pixel_size_x = 0, pixel_size_y = 0;
+
+    if (!strcmp(camera->get_name(), "imx477")) {
+        pixel_size_x = pixel_size_y = 1.55F;
+    }
+    else {
+        LOGF_WARN("%s: Unknown camera name: %s\n", __FUNCTION__, camera->get_name());
+        return false;
+    }
+    SetCCDParams(static_cast<int>(camera->get_width()), static_cast<int>(camera->get_height()), 16, pixel_size_x, pixel_size_y);
+// Should not be called by the client:    UpdateCCDFrame(0, 0, static_cast<int>(camera->get_width()), static_cast<int>(camera->get_height()));
+
     return true;
 }
 
@@ -86,6 +103,9 @@ bool MMALDriver::Connect()
 bool MMALDriver::Disconnect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device disconnected successfully!");
+
+    camera.release();
+
     return true;
 }
 
@@ -142,15 +162,7 @@ bool MMALDriver::initProperties()
 
     setDefaultPollingPeriod(500);
 
-
-
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 1000, .0001, false);
-
-//    PrimaryCCD.setCompressed(false);
-
-    // FIXME: Ask camera about sizes instead of hardcode.
-    SetCCDParams(4056, 3040, 16, 1.55F, 1.55F);
-    UpdateCCDFrame(0, 0, 4056, 3040);
 
     return true;
 }
@@ -334,13 +346,11 @@ void MMALDriver::TimerHit()
 void MMALDriver::grabImage()
 {
     // Let's get a pointer to the frame buffer
-    uint8_t *image = PrimaryCCD.getFrameBuffer();
-    const char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
-
     // Perform the actual exposure.
     // FIXME: Should be a separate thread, this thread should just be waiting.
 
     int isoSpeed = 0;
+
 #ifdef USE_ISO
     isoSpeed = DEFAULT_ISO;
     ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
@@ -348,77 +358,43 @@ void MMALDriver::grabImage()
         isoSpeed = atoi(onISO->label);
     }
 #endif
-    double gain = 1;
-    gain = mGainN[0].value;
-    raspi_exposure(ExposureRequest, isoSpeed, static_cast<float>(gain));
-    fprintf(stderr,"Image exposed to %s.\n", filename);
+    double gain = mGainN[0].value;
 
-    FILE *fp = fopen(filename, "rb");
-    if (!fp)  {
-        LOGF_ERROR("%s: Failed to open %s: %s", __FUNCTION__, filename, strerror(errno));
-        exit(1);
+    image_buffer_pointer = PrimaryCCD.getFrameBuffer();
+    try {
+        camera->set_iso(isoSpeed);
+        camera->set_gain(gain);
+        camera->capture();
+    } catch (MMALCamera::MMALException e) {
+        fprintf(stderr, "Caugh camera exception: %s\n", e.what());
+        return;
     }
-
-    struct stat statbuf;
-    if (stat(filename, &statbuf) != 0) {
-        LOGF_ERROR("%s: Failed to stat %s file: %s", __FUNCTION__, filename, strerror(errno));
-        exit(1);
-    }
-
-    // FIXME: remove all hardcoding for IMAX477 camera. Should at least try to parse the BCRM header.
-    const int raw_file_size = 18711040;
-    const int brcm_header_size = 32768;
-    int bytes_to_fill = PrimaryCCD.getFrameBufferSize();
-
-    assert_framebuffer(&PrimaryCCD);
-
-    if (fseek(fp, statbuf.st_size - raw_file_size, SEEK_SET) != 0)  {
-        LOGF_ERROR("%s: Wrong size of %s: %s", __FUNCTION__, filename, strerror(errno));
-        exit(1);
-    }
-
-    {
-        char brcm_header[brcm_header_size];
-        fread(brcm_header, brcm_header_size, 1, fp);
-        if (strcmp(brcm_header, "BRCMo")) {
-            LOGF_ERROR("%s: Missing BRCMo header, found %.10s as pos %ld", __FUNCTION__, brcm_header, ftell(fp));
-            exit(1);
-        }
-    }
-    std::unique_lock<std::mutex> guard(ccdBufferLock);
-    {
-        const int raw_row_size = 6112;
-        const int trailer = 28;
-        uint8_t row[raw_row_size];
-        int i = 0;
-        while(i < bytes_to_fill)
-        {
-            fread(row, raw_row_size, 1, fp);
-            if (ferror(fp)) {
-                    LOGF_ERROR("%s: Failed to read from file: %s, retrying..", __FUNCTION__, strerror(errno));
-                    sleep(1);
-            }
-
-            for(int p = 0; p < raw_row_size - trailer; p += 3)
-            {
-                uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
-                uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
-                image[i++] = (v1 >> 8) & 0xFF;
-                image[i++] = v1 & 0xFF;
-                image[i++] = (v2 >> 8) & 0xFF;
-                image[i++] = v2 & 0xFF;
-            }
-        }
-    }
-    fclose(fp);
-    unlink(filename);
-
-    guard.unlock();
 
     IDMessage(getDeviceName(), "Download complete.");
 
     // Let INDI::CCD know we're done filling the image buffer
     ExposureComplete(&PrimaryCCD);
+}
+
+/**
+ * @brief MMALDriver::buffer_received Gets called when a new buffer is received from the camera.
+ * This method convers the pixels if needed and stores the recived pixel into the primary
+ * frame buffer.
+ * Assumes that it will be called ones for every row.
+ * @param buffer
+ */
+void MMALDriver::buffer_received(uint8_t *buffer, size_t length)
+{
+    std::unique_lock<std::mutex> guard(ccdBufferLock);
+
+    size_t n_bytes = camera->get_width() * 2; // 16-bits.
+
+    assert(length >= 2 * camera->get_width());
+    assert(PrimaryCCD.getFrameBuffer() + PrimaryCCD.getFrameBufferSize() >= image_buffer_pointer + n_bytes );
+
+    memcpy(image_buffer_pointer, buffer, n_bytes);
+
+    guard.unlock();
 }
 
 bool MMALDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
@@ -484,3 +460,4 @@ bool MMALDriver::ISNewText(const char *dev, const char *name, char *texts[], cha
 
     return INDI::CCD::ISNewText(dev, name, texts, names, n);
 }
+

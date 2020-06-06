@@ -2,36 +2,41 @@
 #define _INDI_MMAL_H
 
 #include <indiccd.h>
+#include "mmalcamera.h"
+#include "mmallistener.h"
 
 #undef USE_ISO
 #define DEFAULT_ISO 400
 
-class MMALDriver : public INDI::CCD
+class MMALDriver : public INDI::CCD, MMALListener
 {
 public:
 	MMALDriver();
 	virtual ~MMALDriver();
+
+    // INDI::CCD Overrides
     virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n) override;
     virtual void ISGetProperties(const char *dev);
     virtual bool ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n) override;
     virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n) override;
 
+    // MMALListener overrides.
+    virtual void buffer_received(uint8_t *buffer, size_t length) override;
+
 protected:
-    bool Connect() override;
-    bool Disconnect() override;
-    const char *getDefaultName() override;
+    // INDI::CCD overrides.
+    virtual bool Connect() override;
+    virtual bool Disconnect() override;
+    virtual const char *getDefaultName() override;
     virtual bool initProperties() override;
     virtual bool updateProperties() override;
     virtual bool saveConfigItems(FILE * fp) override;
     virtual void addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip) override;
-
-
-    // CCD specific functions
     virtual bool StartExposure(float duration) override;
     virtual bool AbortExposure() override;
     virtual bool UpdateCCDFrame(int x, int y, int w, int h) override;
     virtual bool UpdateCCDBin(int hor, int ver) override;
-    void TimerHit();
+    virtual void TimerHit() override;
 
 private:
   // Utility functions
@@ -47,12 +52,16 @@ private:
   struct timeval ExpStart { 0, 0 };
 
   double ExposureRequest { 0 };
+  uint8_t *image_buffer_pointer {0};
+
 #ifdef USE_ISO
   ISwitch mIsoS[4];
   ISwitchVectorProperty mIsoSP;
 #endif
   INumber mGainN[1];
   INumberVectorProperty mGainNP;
+
+  std::unique_ptr<MMALCamera> camera;
 };
 
 extern std::unique_ptr<MMALDriver> mmalDevice;
