@@ -24,6 +24,13 @@ Pixels are ordered by | Bm | Gm | Bl+Gl |
 
 m : MSB 8 bits, l = LSB 4 bits
 
+
+INDI Debugging
+--------------
+To debug the code, one trick to not need to run it as a child of indiserver is to run the binary directly and then pass xml commands om the prompt.
+For instance:
+<getProperties version='1.7'/>
+
 MMAL Debugging
 --------------
 Debug camera by adding dtdebug=1 to /boot/config.txt, reboot and run sudo vcdbg log assert

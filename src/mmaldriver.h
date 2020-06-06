@@ -3,6 +3,9 @@
 
 #include <indiccd.h>
 
+#undef USE_ISO
+#define DEFAULT_ISO 400
+
 class MMALDriver : public INDI::CCD
 {
 public:
@@ -19,6 +22,9 @@ protected:
     const char *getDefaultName() override;
     virtual bool initProperties() override;
     virtual bool updateProperties() override;
+    virtual bool saveConfigItems(FILE * fp) override;
+    virtual void addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip) override;
+
 
     // CCD specific functions
     virtual bool StartExposure(float duration) override;
@@ -29,7 +35,7 @@ protected:
 
 private:
   // Utility functions
-  float CalcTimeLeft();
+  double CalcTimeLeft();
   void setupParams();
   void grabImage();
   void updateFrameBufferSize();
@@ -40,8 +46,14 @@ private:
   // Struct to keep timing
   struct timeval ExpStart { 0, 0 };
 
-  float ExposureRequest { 0 };
-
+  double ExposureRequest { 0 };
+#ifdef USE_ISO
+  ISwitch mIsoS[4];
+  ISwitchVectorProperty mIsoSP;
+#endif
+  INumber mGainN[1];
+  INumberVectorProperty mGainNP;
 };
 
+extern std::unique_ptr<MMALDriver> mmalDevice;
 #endif /* _INDI_MMAL_H */

@@ -1,0 +1,1031 @@
+22:12:19: Running steps for project libindi...
+22:12:19: Starting: "/usr/bin/cmake" --build . --target all
+[  1%] Built target indi_eval
+[ 16%] Built target indidriver
+[ 17%] Built target indi_openweathermap_weather
+[ 18%] Built target indi_vantage_weather
+[ 18%] Built target indi_mbox_weather
+[ 19%] Built target indi_weather_safety_proxy
+[ 19%] Built target indi_usbdewpoint
+[ 19%] Built target indi_simulator_gps
+[ 19%] Built target indi_planewave_deltat
+[ 19%] Built target indi_star2000
+[ 20%] Built target indi_gpusb
+[ 20%] Built target indi_astrometry
+[ 20%] Built target indi_simulator_sqm
+[ 21%] Built target indi_sqm_weather
+[ 22%] Built target indi_astromech_lpm
+[ 22%] Built target indi_pegasus_ppb
+[ 23%] Built target indi_pegasus_upb
+[ 23%] Built target indi_flipflat
+[ 24%] Built target indiclient
+[ 25%] Built target indi_watchdog
+[ 26%] Built target indi_aaf2_focus
+[ 41%] Built target indidriverstatic
+[ 42%] Built target indi_smartfocus_focus
+[ 43%] Built target indi_fcusb_focus
+[ 44%] Built target indi_simulator_guide
+[ 45%] Built target indi_paramount_telescope
+[ 46%] Built target indi_manual_wheel
+[ 47%] Built target indi_pmc8_telescope
+[ 47%] Built target indi_efa_focus
+[ 47%] Built target indi_celestron_gps
+[ 47%] Built target indi_arduinost4
+[ 48%] Built target indi_dmfc_focus
+[ 49%] Built target indi_celestron_sct_focus
+[ 49%] Built target indi_hid_test
+[ 50%] Built target indi_lx200_TeenAstro
+[ 51%] Built target indi_meta_weather
+[ 51%] Built target indi_skycommander_telescope
+Scanning dependencies of target indi_microtouch_focus
+[ 51%] Building CXX object CMakeFiles/indi_microtouch_focus.dir/drivers/focuser/microtouch.cpp.o
+[ 51%] Linking CXX executable indi_microtouch_focus
+[ 51%] Built target indi_microtouch_focus
+Scanning dependencies of target indi_ieqlegacy_telescope
+[ 52%] Building CXX object CMakeFiles/indi_ieqlegacy_telescope.dir/drivers/telescope/ieqprolegacydriver.cpp.o
+[ 52%] Building CXX object CMakeFiles/indi_ieqlegacy_telescope.dir/drivers/telescope/ieqprolegacy.cpp.o
+[ 52%] Linking CXX executable indi_ieqlegacy_telescope
+[ 52%] Built target indi_ieqlegacy_telescope
+Scanning dependencies of target AlignmentDriver
+[ 53%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/AlignmentSubsystemForDrivers.cpp.o
+[ 53%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/BasicMathPlugin.cpp.o
+In file included from /usr/include/c++/8/vector:64,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MathPlugin.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/AlignmentSubsystemForMathPlugins.h:4,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/BasicMathPlugin.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/BasicMathPlugin.cpp:5:
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = INDI::AlignmentSubsystem::TelescopeDirectionVector; _Alloc = std::allocator<INDI::AlignmentSubsystem::TelescopeDirectionVector>]’:
+/usr/include/c++/8/bits/stl_vector.h:1085:4: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*, std::vector<INDI::AlignmentSubsystem::TelescopeDirectionVector> >’ changed in GCC 7.1
+    _M_realloc_insert(end(), __x);
+    ^~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MathPlugin.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/AlignmentSubsystemForMathPlugins.h:4,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/BasicMathPlugin.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/BasicMathPlugin.cpp:5:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_realloc_insert(std::vector<_Tp, _Alloc>::iterator, _Args&& ...) [with _Args = {const INDI::AlignmentSubsystem::TelescopeDirectionVector&}; _Tp = INDI::AlignmentSubsystem::TelescopeDirectionVector; _Alloc = std::allocator<INDI::AlignmentSubsystem::TelescopeDirectionVector>]’:
+/usr/include/c++/8/bits/vector.tcc:413:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::TelescopeDirectionVector>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*, std::vector<INDI::AlignmentSubsystem::TelescopeDirectionVector> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/memory:65,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/Common.h:13,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MathPlugin.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/AlignmentSubsystemForMathPlugins.h:4,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/BasicMathPlugin.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/BasicMathPlugin.cpp:5:
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::__uninitialized_move_if_noexcept_a(_InputIterator, _InputIterator, _ForwardIterator, _Allocator&) [with _InputIterator = INDI::AlignmentSubsystem::TelescopeDirectionVector*; _ForwardIterator = INDI::AlignmentSubsystem::TelescopeDirectionVector*; _Allocator = std::allocator<INDI::AlignmentSubsystem::TelescopeDirectionVector>]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:311:2: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+       return std::__uninitialized_copy_a
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  (_GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__first),
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   _GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__last), __result, __alloc);
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, std::allocator<_Tp>&) [with _InputIterator = std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>; _ForwardIterator = INDI::AlignmentSubsystem::TelescopeDirectionVector*; _Tp = INDI::AlignmentSubsystem::TelescopeDirectionVector]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:287:5: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+     __uninitialized_copy_a(_InputIterator __first, _InputIterator __last,
+     ^~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:287:5: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_uninitialized.h:289:37: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+     { return std::uninitialized_copy(__first, __last, __result); }
+              ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>; _ForwardIterator = INDI::AlignmentSubsystem::TelescopeDirectionVector*]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:115:5: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+     uninitialized_copy(_InputIterator __first, _InputIterator __last,
+     ^~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:115:5: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_uninitialized.h:134:15: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+       return std::__uninitialized_copy<__is_trivial(_ValueType1)
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            && __is_trivial(_ValueType2)
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            && __assignable>::
+            ~~~~~~~~~~~~~~~~~~
+  __uninit_copy(__first, __last, __result);
+  ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h: In static member function ‘static _ForwardIterator std::__uninitialized_copy<_TrivialValueTypes>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>; _ForwardIterator = INDI::AlignmentSubsystem::TelescopeDirectionVector*; bool _TrivialValueTypes = false]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:76:9: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+         __uninit_copy(_InputIterator __first, _InputIterator __last,
+         ^~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:76:9: note: parameter passing for argument of type ‘std::move_iterator<INDI::AlignmentSubsystem::TelescopeDirectionVector*>’ changed in GCC 7.1
+[ 53%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/BuiltInMathPlugin.cpp.o
+[ 53%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/ConvexHull.cpp.o
+[ 53%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/DriverCommon.cpp.o
+[ 54%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/InMemoryDatabase.cpp.o
+In file included from /usr/include/c++/8/vector:64,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/stl_vector.h:1085:4: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+    _M_realloc_insert(end(), __x);
+    ^~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_realloc_insert(std::vector<_Tp, _Alloc>::iterator, _Args&& ...) [with _Args = {const INDI::AlignmentSubsystem::AlignmentDatabaseEntry&}; _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:413:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+[ 54%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/MapPropertiesToInMemoryDatabase.cpp.o
+/home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp: In member function ‘void INDI::AlignmentSubsystem::MapPropertiesToInMemoryDatabase::ProcessSwitchProperties(INDI::Telescope*, const char*, ISState*, char**, int)’:
+/home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:167:91: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::const_iterator’ {aka ‘__gnu_cxx::__normal_iterator<const INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+                 AlignmentDatabase.insert(AlignmentDatabase.begin() + Offset, CurrentValues);
+                                                                                           ^
+/home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:186:75: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::const_iterator’ {aka ‘__gnu_cxx::__normal_iterator<const INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+                 AlignmentDatabase.erase(AlignmentDatabase.begin() + Offset);
+                                                                           ^
+In file included from /usr/include/c++/8/vector:64,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/stl_vector.h:1085:4: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+    _M_realloc_insert(end(), __x);
+    ^~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘std::vector<_Tp, _Alloc>::iterator std::vector<_Tp, _Alloc>::insert(std::vector<_Tp, _Alloc>::const_iterator, const value_type&) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:118:5: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::const_iterator’ {aka ‘__gnu_cxx::__normal_iterator<const INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+     vector<_Tp, _Alloc>::
+     ^~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/vector.tcc:142:6: note: parameter passing for argument of type ‘const __gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+      _M_insert_aux(__pos, std::move(__x_copy._M_val()));
+      ^~~~~~~~~~~~~
+/usr/include/c++/8/bits/vector.tcc:149:2: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+  _M_realloc_insert(begin() + (__position - cbegin()), __x);
+  ^~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:64,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘std::vector<_Tp, _Alloc>::iterator std::vector<_Tp, _Alloc>::erase(std::vector<_Tp, _Alloc>::const_iterator) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/stl_vector.h:1317:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::const_iterator’ {aka ‘__gnu_cxx::__normal_iterator<const INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+       erase(const_iterator __position)
+       ^~~~~
+/usr/include/c++/8/bits/stl_vector.h:1318:58: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+       { return _M_erase(begin() + (__position - cbegin())); }
+                                                          ^
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:15,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_realloc_insert(std::vector<_Tp, _Alloc>::iterator, _Args&& ...) [with _Args = {const INDI::AlignmentSubsystem::AlignmentDatabaseEntry&}; _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:413:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_insert_aux(std::vector<_Tp, _Alloc>::iterator, _Arg&&) [with _Arg = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:382:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/vector.tcc: In member function ‘std::vector<_Tp, _Alloc>::iterator std::vector<_Tp, _Alloc>::_M_erase(std::vector<_Tp, _Alloc>::iterator) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:159:5: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+     vector<_Tp, _Alloc>::
+     ^~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/memory:62,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/Common.h:13,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/vector.tcc:163:2: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+  _GLIBCXX_MOVE3(__position + 1, end(), __position);
+  ^~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_algobase.h: In function ‘_OI std::move(_II, _II, _OI) [with _II = __gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >; _OI = __gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >]’:
+/usr/include/c++/8/bits/stl_algobase.h:479:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+     move(_II __first, _II __last, _OI __result)
+     ^~~~
+/usr/include/c++/8/bits/stl_algobase.h:479:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_algobase.h:479:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_algobase.h:487:39: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+       return std::__copy_move_a2<true>(std::__miter_base(__first),
+              ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            std::__miter_base(__last), __result);
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/cmath:42,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/Common.h:12,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/cpp_type_traits.h: In function ‘_Iterator std::__miter_base(_Iterator) [with _Iterator = __gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >]’:
+/usr/include/c++/8/bits/cpp_type_traits.h:419:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+     __miter_base(_Iterator __it)
+     ^~~~~~~~~~~~
+In file included from /usr/include/c++/8/memory:62,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/Common.h:13,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/stl_algobase.h: In function ‘_OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = true; _II = __gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >; _OI = __gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >]’:
+/usr/include/c++/8/bits/stl_algobase.h:420:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+     __copy_move_a2(_II __first, _II __last, _OI __result)
+     ^~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_algobase.h:420:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_algobase.h:420:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+In file included from /usr/include/c++/8/bits/stl_algobase.h:67,
+                 from /usr/include/c++/8/memory:62,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/Common.h:13,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/InMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.h:11,
+                 from /home/astroberry/git/indi/libs/indibase/alignment/MapPropertiesToInMemoryDatabase.cpp:9:
+/usr/include/c++/8/bits/stl_iterator.h: In function ‘_Iterator std::__niter_base(__gnu_cxx::__normal_iterator<_Iterator, _Container>) [with _Iterator = INDI::AlignmentSubsystem::AlignmentDatabaseEntry*; _Container = std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/stl_iterator.h:987:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+     __niter_base(__gnu_cxx::__normal_iterator<_Iterator, _Container> __it)
+     ^~~~~~~~~~~~
+[ 54%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/MathPlugin.cpp.o
+[ 54%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/MathPluginManagement.cpp.o
+/home/astroberry/git/indi/libs/indibase/alignment/MathPluginManagement.cpp: In member function ‘void INDI::AlignmentSubsystem::MathPluginManagement::EnumeratePlugins()’:
+/home/astroberry/git/indi/libs/indibase/alignment/MathPluginManagement.cpp:364:12: warning: ‘char* strncat(char*, const char*, size_t)’ specified bound 1 equals source length [-Wstringop-overflow=]
+     strncat(MATH_PLUGINS_DIRECTORY, "/", 1);
+     ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[ 55%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/TelescopeDirectionVectorSupportFunctions.cpp.o
+[ 55%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentDriver.dir/Common.cpp.o
+[ 55%] Linking CXX shared library libindiAlignmentDriver.so
+[ 55%] Built target AlignmentDriver
+Scanning dependencies of target indi_synscan_telescope
+[ 55%] Building CXX object CMakeFiles/indi_synscan_telescope.dir/drivers/telescope/synscandriver.cpp.o
+[ 56%] Building CXX object CMakeFiles/indi_synscan_telescope.dir/drivers/telescope/synscanmount.cpp.o
+[ 56%] Linking CXX executable indi_synscan_telescope
+[ 56%] Built target indi_synscan_telescope
+Scanning dependencies of target indilx200
+[ 56%] Building CXX object CMakeFiles/indilx200.dir/drivers/telescope/lx200driver.cpp.o
+[ 56%] Building CXX object CMakeFiles/indilx200.dir/drivers/telescope/lx200telescope.cpp.o
+[ 57%] Linking CXX shared library libindilx200.so
+[ 57%] Built target indilx200
+Scanning dependencies of target indi_imager_agent
+[ 57%] Building CXX object CMakeFiles/indi_imager_agent.dir/drivers/agent/agent_imager.cpp.o
+[ 58%] Building CXX object CMakeFiles/indi_imager_agent.dir/drivers/agent/group.cpp.o
+In file included from /usr/include/c++/8/vector:63,
+                 from /home/astroberry/git/indi/libs/indibase/baseclient.h:25,
+                 from /home/astroberry/git/indi/drivers/agent/group.h:22,
+                 from /home/astroberry/git/indi/drivers/agent/group.cpp:20:
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::__uninitialized_move_if_noexcept_a(_InputIterator, _InputIterator, _ForwardIterator, _Allocator&) [with _InputIterator = INumber*; _ForwardIterator = INumber*; _Allocator = std::allocator<INumber>]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:311:2: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+       return std::__uninitialized_copy_a
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  (_GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__first),
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   _GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__last), __result, __alloc);
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, std::allocator<_Tp>&) [with _InputIterator = std::move_iterator<INumber*>; _ForwardIterator = INumber*; _Tp = INumber]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:287:5: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+     __uninitialized_copy_a(_InputIterator __first, _InputIterator __last,
+     ^~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:287:5: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_uninitialized.h:289:37: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+     { return std::uninitialized_copy(__first, __last, __result); }
+              ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = std::move_iterator<INumber*>; _ForwardIterator = INumber*]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:115:5: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+     uninitialized_copy(_InputIterator __first, _InputIterator __last,
+     ^~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:115:5: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_uninitialized.h:134:15: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+       return std::__uninitialized_copy<__is_trivial(_ValueType1)
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            && __is_trivial(_ValueType2)
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            && __assignable>::
+            ~~~~~~~~~~~~~~~~~~
+  __uninit_copy(__first, __last, __result);
+  ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h: In static member function ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = std::move_iterator<INumber*>; _ForwardIterator = INumber*]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:99:9: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+         __uninit_copy(_InputIterator __first, _InputIterator __last,
+         ^~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:99:9: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_uninitialized.h:101:27: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+         { return std::copy(__first, __last, __result); }
+                  ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/bits/char_traits.h:39,
+                 from /usr/include/c++/8/string:40,
+                 from /home/astroberry/git/indi/libs/indibase/baseclient.h:24,
+                 from /home/astroberry/git/indi/drivers/agent/group.h:22,
+                 from /home/astroberry/git/indi/drivers/agent/group.cpp:20:
+/usr/include/c++/8/bits/stl_algobase.h: In function ‘_OI std::copy(_II, _II, _OI) [with _II = std::move_iterator<INumber*>; _OI = INumber*]’:
+/usr/include/c++/8/bits/stl_algobase.h:446:5: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+     copy(_II __first, _II __last, _OI __result)
+     ^~~~
+/usr/include/c++/8/bits/stl_algobase.h:446:5: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+In file included from /usr/include/c++/8/bits/stl_algobase.h:67,
+                 from /usr/include/c++/8/bits/char_traits.h:39,
+                 from /usr/include/c++/8/string:40,
+                 from /home/astroberry/git/indi/libs/indibase/baseclient.h:24,
+                 from /home/astroberry/git/indi/drivers/agent/group.h:22,
+                 from /home/astroberry/git/indi/drivers/agent/group.cpp:20:
+/usr/include/c++/8/bits/stl_iterator.h: In function ‘decltype (std::__miter_base(__it.base())) std::__miter_base(std::move_iterator<_IteratorL>) [with _Iterator = INumber*]’:
+/usr/include/c++/8/bits/stl_iterator.h:1238:5: note: parameter passing for argument of type ‘std::move_iterator<INumber*>’ changed in GCC 7.1
+     __miter_base(move_iterator<_Iterator> __it)
+     ^~~~~~~~~~~~
+[ 58%] Linking CXX executable indi_imager_agent
+[ 58%] Built target indi_imager_agent
+Scanning dependencies of target indi_nightcrawler_focus
+[ 58%] Building CXX object CMakeFiles/indi_nightcrawler_focus.dir/drivers/rotator/nightcrawler.cpp.o
+[ 58%] Linking CXX executable indi_nightcrawler_focus
+[ 58%] Built target indi_nightcrawler_focus
+Scanning dependencies of target indi_nfocus
+[ 59%] Building CXX object CMakeFiles/indi_nfocus.dir/drivers/focuser/nfocus.cpp.o
+[ 59%] Linking CXX executable indi_nfocus
+[ 59%] Built target indi_nfocus
+Scanning dependencies of target indi_lx200generic
+[ 59%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200driver.cpp.o
+[ 59%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200autostar.cpp.o
+[ 59%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200_16.cpp.o
+[ 60%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200gps.cpp.o
+[ 60%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200generic.cpp.o
+[ 60%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200telescope.cpp.o
+[ 60%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200classic.cpp.o
+[ 60%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200apdriver.cpp.o
+[ 61%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200gemini.cpp.o
+[ 61%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200zeq25.cpp.o
+[ 61%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200gotonova.cpp.o
+[ 61%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200pulsar2.cpp.o
+[ 62%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200ap_experimentaldriver.cpp.o
+[ 62%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200ap_experimental.cpp.o
+[ 62%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200ap.cpp.o
+[ 62%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200ap_gtocp2.cpp.o
+[ 62%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200fs2.cpp.o
+[ 63%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200ss2000pc.cpp.o
+[ 63%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200_OnStep.cpp.o
+[ 63%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/lx200_10micron.cpp.o
+[ 63%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/ioptronHC8406.cpp.o
+[ 64%] Building CXX object CMakeFiles/indi_lx200generic.dir/drivers/telescope/eq500x.cpp.o
+[ 64%] Linking CXX executable indi_lx200generic
+[ 64%] Built target indi_lx200generic
+Scanning dependencies of target indi_lakeside_focus
+[ 64%] Building CXX object CMakeFiles/indi_lakeside_focus.dir/drivers/focuser/lakeside.cpp.o
+[ 64%] Linking CXX executable indi_lakeside_focus
+[ 64%] Built target indi_lakeside_focus
+Scanning dependencies of target indi_rolloff_dome
+[ 64%] Building CXX object CMakeFiles/indi_rolloff_dome.dir/drivers/dome/roll_off.cpp.o
+[ 64%] Linking CXX executable indi_rolloff_dome
+[ 64%] Built target indi_rolloff_dome
+Scanning dependencies of target indi_moonlitedro_focus
+[ 64%] Building CXX object CMakeFiles/indi_moonlitedro_focus.dir/drivers/focuser/moonlite_dro.cpp.o
+[ 64%] Linking CXX executable indi_moonlitedro_focus
+[ 64%] Built target indi_moonlitedro_focus
+Scanning dependencies of target indi_script_telescope
+[ 65%] Building CXX object CMakeFiles/indi_script_telescope.dir/drivers/telescope/telescope_script.cpp.o
+[ 65%] Linking CXX executable indi_script_telescope
+[ 65%] Built target indi_script_telescope
+Scanning dependencies of target indi_simulator_wheel
+[ 65%] Building CXX object CMakeFiles/indi_simulator_wheel.dir/drivers/filter_wheel/filter_simulator.cpp.o
+[ 65%] Linking CXX executable indi_simulator_wheel
+[ 65%] Built target indi_simulator_wheel
+Scanning dependencies of target indi_perfectstar_focus
+[ 65%] Building CXX object CMakeFiles/indi_perfectstar_focus.dir/drivers/focuser/perfectstar.cpp.o
+[ 65%] Linking CXX executable indi_perfectstar_focus
+[ 65%] Built target indi_perfectstar_focus
+Scanning dependencies of target indi_simulator_telescope
+[ 66%] Building CXX object CMakeFiles/indi_simulator_telescope.dir/drivers/telescope/telescope_simulator.cpp.o
+[ 66%] Building CXX object CMakeFiles/indi_simulator_telescope.dir/drivers/telescope/scopesim_helper.cpp.o
+[ 66%] Linking CXX executable indi_simulator_telescope
+[ 66%] Built target indi_simulator_telescope
+Scanning dependencies of target indi_nstep_focus
+[ 67%] Building CXX object CMakeFiles/indi_nstep_focus.dir/drivers/focuser/nstep.cpp.o
+[ 67%] Linking CXX executable indi_nstep_focus
+[ 67%] Built target indi_nstep_focus
+Scanning dependencies of target indi_onfocus_focus
+[ 67%] Building CXX object CMakeFiles/indi_onfocus_focus.dir/drivers/focuser/onfocus.cpp.o
+[ 67%] Linking CXX executable indi_onfocus_focus
+[ 67%] Built target indi_onfocus_focus
+Scanning dependencies of target indi_getprop
+[ 67%] Building C object CMakeFiles/indi_getprop.dir/eventloop.c.o
+[ 67%] Building C object CMakeFiles/indi_getprop.dir/base64.c.o
+[ 67%] Building C object CMakeFiles/indi_getprop.dir/tools/getINDIproperty.c.o
+[ 68%] Building C object CMakeFiles/indi_getprop.dir/libs/lilxml.c.o
+[ 68%] Building C object CMakeFiles/indi_getprop.dir/libs/indicom.c.o
+[ 68%] Linking C executable indi_getprop
+[ 68%] Built target indi_getprop
+Scanning dependencies of target indi_wunderground_weather
+[ 68%] Building CXX object CMakeFiles/indi_wunderground_weather.dir/drivers/weather/gason.cpp.o
+[ 68%] Building CXX object CMakeFiles/indi_wunderground_weather.dir/drivers/weather/wunderground.cpp.o
+[ 68%] Linking CXX executable indi_wunderground_weather
+[ 68%] Built target indi_wunderground_weather
+Scanning dependencies of target indi_simulator_weather
+[ 68%] Building CXX object CMakeFiles/indi_simulator_weather.dir/drivers/weather/weathersimulator.cpp.o
+[ 69%] Linking CXX executable indi_simulator_weather
+[ 69%] Built target indi_simulator_weather
+Scanning dependencies of target indi_rigel_dome
+[ 69%] Building CXX object CMakeFiles/indi_rigel_dome.dir/drivers/dome/rigel_dome.cpp.o
+[ 69%] Linking CXX executable indi_rigel_dome
+[ 69%] Built target indi_rigel_dome
+Scanning dependencies of target indi_integra_focus
+[ 69%] Building CXX object CMakeFiles/indi_integra_focus.dir/drivers/rotator/integra.cpp.o
+[ 69%] Linking CXX executable indi_integra_focus
+[ 69%] Built target indi_integra_focus
+Scanning dependencies of target indi_rainbow_telescope
+[ 69%] Building CXX object CMakeFiles/indi_rainbow_telescope.dir/drivers/telescope/rainbow.cpp.o
+[ 70%] Linking CXX executable indi_rainbow_telescope
+[ 70%] Built target indi_rainbow_telescope
+Scanning dependencies of target indi_tcfs_focus
+[ 71%] Building CXX object CMakeFiles/indi_tcfs_focus.dir/drivers/focuser/tcfs.cpp.o
+[ 71%] Linking CXX executable indi_tcfs_focus
+[ 71%] Built target indi_tcfs_focus
+Scanning dependencies of target indi_temma_telescope
+[ 71%] Building CXX object CMakeFiles/indi_temma_telescope.dir/drivers/telescope/temmadriver.cpp.o
+[ 71%] Linking CXX executable indi_temma_telescope
+[ 71%] Built target indi_temma_telescope
+Scanning dependencies of target indiserver
+[ 71%] Building C object CMakeFiles/indiserver.dir/indiserver.c.o
+[ 72%] Building C object CMakeFiles/indiserver.dir/fq.c.o
+[ 72%] Building C object CMakeFiles/indiserver.dir/libs/lilxml.c.o
+[ 72%] Linking C executable indiserver
+[ 73%] Built target indiserver
+Scanning dependencies of target indi_ieq_telescope
+[ 73%] Building CXX object CMakeFiles/indi_ieq_telescope.dir/drivers/telescope/ieqdriverbase.cpp.o
+[ 73%] Building CXX object CMakeFiles/indi_ieq_telescope.dir/drivers/telescope/ieqpro.cpp.o
+[ 73%] Linking CXX executable indi_ieq_telescope
+[ 73%] Built target indi_ieq_telescope
+Scanning dependencies of target indi_ioptronv3_telescope
+[ 73%] Building CXX object CMakeFiles/indi_ioptronv3_telescope.dir/drivers/telescope/ioptronv3driver.cpp.o
+[ 74%] Building CXX object CMakeFiles/indi_ioptronv3_telescope.dir/drivers/telescope/ioptronv3.cpp.o
+[ 74%] Linking CXX executable indi_ioptronv3_telescope
+[ 74%] Built target indi_ioptronv3_telescope
+Scanning dependencies of target indi_lx200basic
+[ 74%] Building CXX object CMakeFiles/indi_lx200basic.dir/drivers/telescope/lx200driver.cpp.o
+[ 75%] Building CXX object CMakeFiles/indi_lx200basic.dir/drivers/telescope/lx200basic.cpp.o
+[ 75%] Linking CXX executable indi_lx200basic
+[ 75%] Built target indi_lx200basic
+Scanning dependencies of target indi_moonlite_focus
+[ 75%] Building CXX object CMakeFiles/indi_moonlite_focus.dir/drivers/focuser/moonlite.cpp.o
+[ 76%] Linking CXX executable indi_moonlite_focus
+[ 76%] Built target indi_moonlite_focus
+Scanning dependencies of target indi_synscanlegacy_telescope
+[ 76%] Building CXX object CMakeFiles/indi_synscanlegacy_telescope.dir/drivers/telescope/synscandriverlegacy.cpp.o
+[ 76%] Building CXX object CMakeFiles/indi_synscanlegacy_telescope.dir/drivers/telescope/synscanmountlegacy.cpp.o
+[ 76%] Linking CXX executable indi_synscanlegacy_telescope
+[ 76%] Built target indi_synscanlegacy_telescope
+Scanning dependencies of target indi_myfocuserpro2_focus
+[ 76%] Building CXX object CMakeFiles/indi_myfocuserpro2_focus.dir/drivers/focuser/myfocuserpro2.cpp.o
+[ 76%] Linking CXX executable indi_myfocuserpro2_focus
+[ 76%] Built target indi_myfocuserpro2_focus
+Scanning dependencies of target indi_qhycfw1_wheel
+[ 76%] Building CXX object CMakeFiles/indi_qhycfw1_wheel.dir/drivers/filter_wheel/qhycfw1.cpp.o
+[ 76%] Linking CXX executable indi_qhycfw1_wheel
+[ 76%] Built target indi_qhycfw1_wheel
+Scanning dependencies of target indi_sestosenso_focus
+[ 76%] Building CXX object CMakeFiles/indi_sestosenso_focus.dir/drivers/focuser/sestosenso.cpp.o
+[ 77%] Linking CXX executable indi_sestosenso_focus
+[ 77%] Built target indi_sestosenso_focus
+Scanning dependencies of target indi_hitecastrodc_focus
+[ 78%] Building CXX object CMakeFiles/indi_hitecastrodc_focus.dir/drivers/focuser/hitecastrodcfocuser.cpp.o
+[ 78%] Linking CXX executable indi_hitecastrodc_focus
+[ 78%] Built target indi_hitecastrodc_focus
+Scanning dependencies of target indi_watcher_weather
+[ 78%] Building CXX object CMakeFiles/indi_watcher_weather.dir/drivers/weather/weatherwatcher.cpp.o
+[ 78%] Linking CXX executable indi_watcher_weather
+[ 78%] Built target indi_watcher_weather
+Scanning dependencies of target indi_joystick
+[ 78%] Building CXX object CMakeFiles/indi_joystick.dir/drivers/auxiliary/joystickdriver.cpp.o
+[ 78%] Building CXX object CMakeFiles/indi_joystick.dir/drivers/auxiliary/joystick.cpp.o
+[ 79%] Linking CXX executable indi_joystick
+[ 79%] Built target indi_joystick
+Scanning dependencies of target indi_sestosenso2_focus
+[ 79%] Building CXX object CMakeFiles/indi_sestosenso2_focus.dir/drivers/focuser/sestosenso2.cpp.o
+[ 79%] Linking CXX executable indi_sestosenso2_focus
+[ 79%] Built target indi_sestosenso2_focus
+Scanning dependencies of target indi_usbfocusv3_focus
+[ 79%] Building CXX object CMakeFiles/indi_usbfocusv3_focus.dir/drivers/focuser/usbfocusv3.cpp.o
+[ 80%] Linking CXX executable indi_usbfocusv3_focus
+[ 80%] Built target indi_usbfocusv3_focus
+Scanning dependencies of target indi_steeldrive2_focus
+[ 81%] Building CXX object CMakeFiles/indi_steeldrive2_focus.dir/drivers/focuser/steeldrive2.cpp.o
+[ 81%] Linking CXX executable indi_steeldrive2_focus
+[ 81%] Built target indi_steeldrive2_focus
+Scanning dependencies of target indi_simulator_spectrograph
+[ 81%] Building CXX object CMakeFiles/indi_simulator_spectrograph.dir/drivers/spectrograph/spectrograph_simulator.cpp.o
+[ 81%] Linking CXX executable indi_simulator_spectrograph
+[ 81%] Built target indi_simulator_spectrograph
+Scanning dependencies of target indi_steeldrive_focus
+[ 81%] Building CXX object CMakeFiles/indi_steeldrive_focus.dir/drivers/focuser/steeldrive.cpp.o
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp: In member function ‘bool SteelDrive::Ack()’:
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:251:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 11 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":FV2.00812#", STEELDRIVE_CMD_LONG);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp: In member function ‘bool SteelDrive::updateVersion()’:
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:304:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 11 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":FV2.00812#", STEELDRIVE_CMD_LONG);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:351:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 11 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":FN2.21012#", STEELDRIVE_CMD_LONG);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp: In member function ‘bool SteelDrive::updateTemperature()’:
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:411:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":F5+1810#", STEELDRIVE_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp: In member function ‘bool SteelDrive::updateSpeed()’:
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:540:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":FG00350#", STEELDRIVE_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp: In member function ‘bool SteelDrive::updateAcceleration()’:
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:592:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":FH01800#", STEELDRIVE_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp: In member function ‘bool SteelDrive::updateTemperatureSettings()’:
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:644:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":F710004#", STEELDRIVE_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp: In member function ‘bool SteelDrive::updateCustomSettings()’:
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:710:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":FE25040#", STEELDRIVE_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/focuser/steeldrive.cpp:750:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 11 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, ":F40011577#", STEELDRIVE_CMD_LONG);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[ 81%] Linking CXX executable indi_steeldrive_focus
+[ 81%] Built target indi_steeldrive_focus
+Scanning dependencies of target indi_qhycfw3_wheel
+[ 82%] Building CXX object CMakeFiles/indi_qhycfw3_wheel.dir/drivers/filter_wheel/qhycfw3.cpp.o
+[ 82%] Linking CXX executable indi_qhycfw3_wheel
+[ 82%] Built target indi_qhycfw3_wheel
+Scanning dependencies of target indi_setprop
+[ 82%] Building C object CMakeFiles/indi_setprop.dir/eventloop.c.o
+[ 82%] Building C object CMakeFiles/indi_setprop.dir/base64.c.o
+[ 82%] Building C object CMakeFiles/indi_setprop.dir/tools/setINDIproperty.c.o
+[ 83%] Building C object CMakeFiles/indi_setprop.dir/libs/lilxml.c.o
+[ 83%] Building C object CMakeFiles/indi_setprop.dir/libs/indicom.c.o
+[ 83%] Linking C executable indi_setprop
+[ 83%] Built target indi_setprop
+Scanning dependencies of target indi_lynx_focus
+[ 83%] Building CXX object CMakeFiles/indi_lynx_focus.dir/drivers/focuser/focuslynxbase.cpp.o
+/home/astroberry/git/indi/drivers/focuser/focuslynxbase.cpp: In member function ‘bool FocusLynxBase::getFocusStatus()’:
+/home/astroberry/git/indi/drivers/focuser/focuslynxbase.cpp:1111:20: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 16 bytes from a string of the same length [-Wstringop-truncation]
+             strncpy(response, "Temp(C) = +21.7\n", 16);
+             ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[ 83%] Building CXX object CMakeFiles/indi_lynx_focus.dir/drivers/focuser/focuslynx.cpp.o
+[ 83%] Linking CXX executable indi_lynx_focus
+[ 83%] Built target indi_lynx_focus
+Scanning dependencies of target indi_robo_focus
+[ 83%] Building CXX object CMakeFiles/indi_robo_focus.dir/drivers/focuser/robofocus.cpp.o
+[ 84%] Linking CXX executable indi_robo_focus
+[ 84%] Built target indi_robo_focus
+Scanning dependencies of target indi_skysafari
+[ 85%] Building CXX object CMakeFiles/indi_skysafari.dir/drivers/auxiliary/skysafari.cpp.o
+[ 85%] Building CXX object CMakeFiles/indi_skysafari.dir/drivers/auxiliary/skysafariclient.cpp.o
+[ 85%] Linking CXX executable indi_skysafari
+[ 85%] Built target indi_skysafari
+Scanning dependencies of target indi_simulator_focus
+[ 85%] Building CXX object CMakeFiles/indi_simulator_focus.dir/drivers/focuser/focus_simulator.cpp.o
+[ 86%] Linking CXX executable indi_simulator_focus
+[ 86%] Built target indi_simulator_focus
+Scanning dependencies of target indi_deepskydad_af1_focus
+[ 86%] Building CXX object CMakeFiles/indi_deepskydad_af1_focus.dir/drivers/focuser/deepskydad_af1.cpp.o
+[ 86%] Linking CXX executable indi_deepskydad_af1_focus
+[ 86%] Built target indi_deepskydad_af1_focus
+Scanning dependencies of target indi_baader_dome
+[ 86%] Building CXX object CMakeFiles/indi_baader_dome.dir/drivers/dome/baader_dome.cpp.o
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp: In member function ‘bool BaaderDome::UpdateShutterStatus()’:
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:369:20: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+             strncpy(resp, "d#shutclo", DOME_CMD);
+             ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:371:20: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+             strncpy(resp, "d#shutope", DOME_CMD);
+             ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:373:20: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+             strncpy(resp, "d#shutrun", DOME_CMD);
+             ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp: In member function ‘virtual IPState BaaderDome::MoveAbs(double)’:
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:697:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, "d#gotmess", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp: In member function ‘virtual IPState BaaderDome::ControlShutter(INDI::Dome::ShutterOperation)’:
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:766:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(cmd, "d#opeshut", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:771:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(cmd, "d#closhut", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:788:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, "d#gotmess", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp: In member function ‘int BaaderDome::ControlDomeFlap(BaaderDome::FlapOperation)’:
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:858:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(cmd, "d#opeflap", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:863:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(cmd, "d#cloflap", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:880:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, "d#gotmess", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp: In member function ‘bool BaaderDome::UpdateFlapStatus()’:
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:926:20: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+             strncpy(resp, "d#flapclo", DOME_CMD);
+             ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:928:20: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+             strncpy(resp, "d#flapope", DOME_CMD);
+             ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:930:20: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+             strncpy(resp, "d#flaprun", DOME_CMD);
+             ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp: In member function ‘bool BaaderDome::SaveEncoderPosition()’:
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:993:12: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+     strncpy(cmd, "d#encsave", DOME_CMD);
+     ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/astroberry/git/indi/drivers/dome/baader_dome.cpp:1008:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated before terminating nul copying 9 bytes from a string of the same length [-Wstringop-truncation]
+         strncpy(resp, "d#gotmess", DOME_CMD);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[ 87%] Linking CXX executable indi_baader_dome
+[ 87%] Built target indi_baader_dome
+Scanning dependencies of target indi_script_dome
+[ 87%] Building CXX object CMakeFiles/indi_script_dome.dir/drivers/dome/dome_script.cpp.o
+[ 87%] Linking CXX executable indi_script_dome
+[ 87%] Built target indi_script_dome
+Scanning dependencies of target indi_xagyl_wheel
+[ 87%] Building CXX object CMakeFiles/indi_xagyl_wheel.dir/drivers/filter_wheel/xagyl_wheel.cpp.o
+[ 88%] Linking CXX executable indi_xagyl_wheel
+[ 88%] Built target indi_xagyl_wheel
+Scanning dependencies of target indi_deepskydad_af2_focus
+[ 89%] Building CXX object CMakeFiles/indi_deepskydad_af2_focus.dir/drivers/focuser/deepskydad_af2.cpp.o
+[ 89%] Linking CXX executable indi_deepskydad_af2_focus
+[ 89%] Built target indi_deepskydad_af2_focus
+Scanning dependencies of target indi_quantum_wheel
+[ 89%] Building CXX object CMakeFiles/indi_quantum_wheel.dir/drivers/filter_wheel/quantum_wheel.cpp.o
+[ 89%] Linking CXX executable indi_quantum_wheel
+[ 89%] Built target indi_quantum_wheel
+Scanning dependencies of target indi_siefs_focus
+[ 89%] Building CXX object CMakeFiles/indi_siefs_focus.dir/drivers/focuser/si_efs.cpp.o
+[ 89%] Linking CXX executable indi_siefs_focus
+[ 89%] Built target indi_siefs_focus
+Scanning dependencies of target indi_v4l2_ccd
+[ 89%] Building CXX object CMakeFiles/indi_v4l2_ccd.dir/libs/lx/Lx.cpp.o
+[ 89%] Building CXX object CMakeFiles/indi_v4l2_ccd.dir/drivers/video/v4l2driver.cpp.o
+[ 89%] Building CXX object CMakeFiles/indi_v4l2_ccd.dir/drivers/video/indi_v4l2driver.cpp.o
+[ 90%] Building C object CMakeFiles/indi_v4l2_ccd.dir/libs/webcam/v4l2_colorspace.c.o
+[ 90%] Building CXX object CMakeFiles/indi_v4l2_ccd.dir/libs/webcam/v4l2_base.cpp.o
+[ 90%] Building CXX object CMakeFiles/indi_v4l2_ccd.dir/libs/webcam/v4l2_decode/v4l2_decode.cpp.o
+[ 90%] Building CXX object CMakeFiles/indi_v4l2_ccd.dir/libs/webcam/v4l2_decode/v4l2_builtin_decoder.cpp.o
+[ 90%] Linking CXX executable indi_v4l2_ccd
+[ 90%] Built target indi_v4l2_ccd
+Scanning dependencies of target indi_deepskydad_af3_focus
+[ 90%] Building CXX object CMakeFiles/indi_deepskydad_af3_focus.dir/drivers/focuser/deepskydad_af3.cpp.o
+[ 90%] Linking CXX executable indi_deepskydad_af3_focus
+[ 90%] Built target indi_deepskydad_af3_focus
+Scanning dependencies of target indi_optec_wheel
+[ 90%] Building CXX object CMakeFiles/indi_optec_wheel.dir/drivers/filter_wheel/ifwoptec.cpp.o
+/home/astroberry/git/indi/drivers/filter_wheel/ifwoptec.cpp: In member function ‘virtual bool FilterIFW::GetFilterNames()’:
+/home/astroberry/git/indi/drivers/filter_wheel/ifwoptec.cpp:669:24: warning: ‘char* strncat(char*, const char*, size_t)’ specified bound 1 equals source length [-Wstringop-overflow=]
+                 strncat(filterList, "/", 1);
+                 ~~~~~~~^~~~~~~~~~~~~~~~~~~~
+[ 90%] Linking CXX executable indi_optec_wheel
+[ 90%] Built target indi_optec_wheel
+Scanning dependencies of target indi_lacerta_mfoc_focus
+[ 90%] Building CXX object CMakeFiles/indi_lacerta_mfoc_focus.dir/drivers/focuser/lacerta_mfoc.cpp.o
+[ 90%] Linking CXX executable indi_lacerta_mfoc_focus
+[ 90%] Built target indi_lacerta_mfoc_focus
+Scanning dependencies of target indi_pyxis_rotator
+[ 90%] Building CXX object CMakeFiles/indi_pyxis_rotator.dir/drivers/rotator/pyxis.cpp.o
+[ 91%] Linking CXX executable indi_pyxis_rotator
+[ 91%] Built target indi_pyxis_rotator
+Scanning dependencies of target indi_snapcap
+[ 91%] Building CXX object CMakeFiles/indi_snapcap.dir/drivers/auxiliary/snapcap.cpp.o
+[ 91%] Linking CXX executable indi_snapcap
+[ 91%] Built target indi_snapcap
+Scanning dependencies of target indi_gemini_focus
+[ 92%] Building CXX object CMakeFiles/indi_gemini_focus.dir/drivers/rotator/gemini.cpp.o
+/home/astroberry/git/indi/drivers/rotator/gemini.cpp: In member function ‘bool Gemini::getFocusStatus()’:
+/home/astroberry/git/indi/drivers/rotator/gemini.cpp:1916:16: warning: ‘char* strncpy(char*, const char*, size_t)’ output truncated copying 16 bytes from a string of length 17 [-Wstringop-truncation]
+         strncpy(response, "CurrTemp = +21.7\n", 16);
+         ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[ 92%] Linking CXX executable indi_gemini_focus
+[ 92%] Built target indi_gemini_focus
+Scanning dependencies of target indi_trutech_wheel
+[ 93%] Building CXX object CMakeFiles/indi_trutech_wheel.dir/drivers/filter_wheel/trutech_wheel.cpp.o
+[ 93%] Linking CXX executable indi_trutech_wheel
+[ 93%] Built target indi_trutech_wheel
+Scanning dependencies of target indi_qhycfw2_wheel
+[ 93%] Building CXX object CMakeFiles/indi_qhycfw2_wheel.dir/drivers/filter_wheel/qhycfw2.cpp.o
+[ 93%] Linking CXX executable indi_qhycfw2_wheel
+[ 93%] Built target indi_qhycfw2_wheel
+Scanning dependencies of target indi_dsc_telescope
+[ 93%] Building CXX object CMakeFiles/indi_dsc_telescope.dir/drivers/telescope/dsc.cpp.o
+In file included from /usr/include/c++/8/vector:64,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/dsc.h:26,
+                 from /home/astroberry/git/indi/drivers/telescope/dsc.cpp:22:
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/stl_vector.h:1085:4: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+    _M_realloc_insert(end(), __x);
+    ^~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/dsc.h:26,
+                 from /home/astroberry/git/indi/drivers/telescope/dsc.cpp:22:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_realloc_insert(std::vector<_Tp, _Alloc>::iterator, _Args&& ...) [with _Args = {const INDI::AlignmentSubsystem::AlignmentDatabaseEntry&}; _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:413:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+[ 93%] Linking CXX executable indi_dsc_telescope
+[ 93%] Built target indi_dsc_telescope
+Scanning dependencies of target indi_simulator_dome
+[ 93%] Building CXX object CMakeFiles/indi_simulator_dome.dir/drivers/dome/dome_simulator.cpp.o
+[ 93%] Linking CXX executable indi_simulator_dome
+[ 93%] Built target indi_simulator_dome
+Scanning dependencies of target indi_simulator_ccd
+[ 94%] Building CXX object CMakeFiles/indi_simulator_ccd.dir/drivers/ccd/ccd_simulator.cpp.o
+[ 94%] Linking CXX executable indi_simulator_ccd
+[ 94%] Built target indi_simulator_ccd
+Scanning dependencies of target indi_domepro2_dome
+[ 94%] Building CXX object CMakeFiles/indi_domepro2_dome.dir/drivers/dome/domepro2.cpp.o
+[ 94%] Linking CXX executable indi_domepro2_dome
+[ 94%] Built target indi_domepro2_dome
+Scanning dependencies of target indi_scopedome_dome
+[ 94%] Building CXX object CMakeFiles/indi_scopedome_dome.dir/drivers/dome/scopedome_dome.cpp.o
+[ 94%] Building CXX object CMakeFiles/indi_scopedome_dome.dir/drivers/dome/scopedome_usb21.cpp.o
+[ 95%] Building CXX object CMakeFiles/indi_scopedome_dome.dir/drivers/dome/scopedome_sim.cpp.o
+[ 95%] Linking CXX executable indi_scopedome_dome
+[ 95%] Built target indi_scopedome_dome
+Scanning dependencies of target AlignmentClient
+[ 95%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentClient.dir/AlignmentSubsystemForClients.cpp.o
+[ 95%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentClient.dir/ClientAPIForAlignmentDatabase.cpp.o
+[ 95%] Building CXX object libs/indibase/alignment/CMakeFiles/AlignmentClient.dir/ClientAPIForMathPluginManagement.cpp.o
+[ 95%] Linking CXX static library libindiAlignmentClient.a
+[ 95%] Built target AlignmentClient
+Scanning dependencies of target indi_SVD_MathPlugin
+[ 95%] Building CXX object libs/indibase/alignment/CMakeFiles/indi_SVD_MathPlugin.dir/SVDMathPlugin.cpp.o
+[ 95%] Linking CXX shared library libindi_SVD_MathPlugin.so
+[ 95%] Built target indi_SVD_MathPlugin
+Scanning dependencies of target indi_skywatcherAltAzMount
+[ 95%] Building CXX object libs/indibase/alignment/CMakeFiles/indi_skywatcherAltAzMount.dir/__/__/__/drivers/telescope/skywatcherAPIMount.cpp.o
+/home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp: In member function ‘virtual void SkywatcherAPIMount::TimerHit()’:
+/home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:1401:52: note: parameter passing for argument of type ‘std::vector<GuidingPulse>::const_iterator’ {aka ‘__gnu_cxx::__normal_iterator<const GuidingPulse*, std::vector<GuidingPulse> >’} changed in GCC 7.1
+                     Iter = GuidingPulses.erase(Iter);
+                                                    ^
+In file included from /usr/include/c++/8/vector:64,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:23,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/stl_vector.h:1085:4: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+    _M_realloc_insert(end(), __x);
+    ^~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘std::vector<_Tp, _Alloc>::iterator std::vector<_Tp, _Alloc>::erase(std::vector<_Tp, _Alloc>::const_iterator) [with _Tp = GuidingPulse; _Alloc = std::allocator<GuidingPulse>]’:
+/usr/include/c++/8/bits/stl_vector.h:1317:7: note: parameter passing for argument of type ‘std::vector<GuidingPulse>::const_iterator’ {aka ‘__gnu_cxx::__normal_iterator<const GuidingPulse*, std::vector<GuidingPulse> >’} changed in GCC 7.1
+       erase(const_iterator __position)
+       ^~~~~
+/usr/include/c++/8/bits/stl_vector.h:1318:58: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+       { return _M_erase(begin() + (__position - cbegin())); }
+                                                          ^
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = GuidingPulse; _Alloc = std::allocator<GuidingPulse>]’:
+/usr/include/c++/8/bits/stl_vector.h:1085:4: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+    _M_realloc_insert(end(), __x);
+    ^~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:23,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_realloc_insert(std::vector<_Tp, _Alloc>::iterator, _Args&& ...) [with _Args = {const INDI::AlignmentSubsystem::AlignmentDatabaseEntry&}; _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:413:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/vector.tcc: In member function ‘std::vector<_Tp, _Alloc>::iterator std::vector<_Tp, _Alloc>::_M_erase(std::vector<_Tp, _Alloc>::iterator) [with _Tp = GuidingPulse; _Alloc = std::allocator<GuidingPulse>]’:
+/usr/include/c++/8/bits/vector.tcc:159:5: note: parameter passing for argument of type ‘std::vector<GuidingPulse>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’} changed in GCC 7.1
+     vector<_Tp, _Alloc>::
+     ^~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/bits/char_traits.h:39,
+                 from /usr/include/c++/8/string:40,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/vector.tcc:163:2: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+  _GLIBCXX_MOVE3(__position + 1, end(), __position);
+  ^~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:23,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_realloc_insert(std::vector<_Tp, _Alloc>::iterator, _Args&& ...) [with _Args = {const GuidingPulse&}; _Tp = GuidingPulse; _Alloc = std::allocator<GuidingPulse>]’:
+/usr/include/c++/8/bits/vector.tcc:413:7: note: parameter passing for argument of type ‘std::vector<GuidingPulse>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/bits/char_traits.h:39,
+                 from /usr/include/c++/8/string:40,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/stl_algobase.h: In function ‘_OI std::move(_II, _II, _OI) [with _II = __gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >; _OI = __gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >]’:
+/usr/include/c++/8/bits/stl_algobase.h:479:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+     move(_II __first, _II __last, _OI __result)
+     ^~~~
+/usr/include/c++/8/bits/stl_algobase.h:479:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_algobase.h:479:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_algobase.h:487:39: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+       return std::__copy_move_a2<true>(std::__miter_base(__first),
+              ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            std::__miter_base(__last), __result);
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:63,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:23,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::__uninitialized_move_if_noexcept_a(_InputIterator, _InputIterator, _ForwardIterator, _Allocator&) [with _InputIterator = GuidingPulse*; _ForwardIterator = GuidingPulse*; _Allocator = std::allocator<GuidingPulse>]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:311:2: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+       return std::__uninitialized_copy_a
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  (_GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__first),
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   _GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__last), __result, __alloc);
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/bits/stl_algobase.h:61,
+                 from /usr/include/c++/8/bits/char_traits.h:39,
+                 from /usr/include/c++/8/string:40,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/cpp_type_traits.h: In function ‘_Iterator std::__miter_base(_Iterator) [with _Iterator = __gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >]’:
+/usr/include/c++/8/bits/cpp_type_traits.h:419:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+     __miter_base(_Iterator __it)
+     ^~~~~~~~~~~~
+In file included from /usr/include/c++/8/bits/char_traits.h:39,
+                 from /usr/include/c++/8/string:40,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/stl_algobase.h: In function ‘_OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = true; _II = __gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >; _OI = __gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >]’:
+/usr/include/c++/8/bits/stl_algobase.h:420:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+     __copy_move_a2(_II __first, _II __last, _OI __result)
+     ^~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_algobase.h:420:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_algobase.h:420:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+In file included from /usr/include/c++/8/vector:63,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:23,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, std::allocator<_Tp>&) [with _InputIterator = std::move_iterator<GuidingPulse*>; _ForwardIterator = GuidingPulse*; _Tp = GuidingPulse]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:287:5: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+     __uninitialized_copy_a(_InputIterator __first, _InputIterator __last,
+     ^~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:287:5: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_uninitialized.h:289:37: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+     { return std::uninitialized_copy(__first, __last, __result); }
+              ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/bits/stl_algobase.h:67,
+                 from /usr/include/c++/8/bits/char_traits.h:39,
+                 from /usr/include/c++/8/string:40,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/stl_iterator.h: In function ‘_Iterator std::__niter_base(__gnu_cxx::__normal_iterator<_Iterator, _Container>) [with _Iterator = GuidingPulse*; _Container = std::vector<GuidingPulse>]’:
+/usr/include/c++/8/bits/stl_iterator.h:987:5: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<GuidingPulse*, std::vector<GuidingPulse> >’ changed in GCC 7.1
+     __niter_base(__gnu_cxx::__normal_iterator<_Iterator, _Container> __it)
+     ^~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:63,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPI.h:23,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.h:19,
+                 from /home/astroberry/git/indi/drivers/telescope/skywatcherAPIMount.cpp:16:
+/usr/include/c++/8/bits/stl_uninitialized.h: In function ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = std::move_iterator<GuidingPulse*>; _ForwardIterator = GuidingPulse*]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:115:5: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+     uninitialized_copy(_InputIterator __first, _InputIterator __last,
+     ^~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:115:5: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+/usr/include/c++/8/bits/stl_uninitialized.h:134:15: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+       return std::__uninitialized_copy<__is_trivial(_ValueType1)
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            && __is_trivial(_ValueType2)
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            && __assignable>::
+            ~~~~~~~~~~~~~~~~~~
+  __uninit_copy(__first, __last, __result);
+  ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h: In static member function ‘static _ForwardIterator std::__uninitialized_copy<_TrivialValueTypes>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = std::move_iterator<GuidingPulse*>; _ForwardIterator = GuidingPulse*; bool _TrivialValueTypes = false]’:
+/usr/include/c++/8/bits/stl_uninitialized.h:76:9: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+         __uninit_copy(_InputIterator __first, _InputIterator __last,
+         ^~~~~~~~~~~~~
+/usr/include/c++/8/bits/stl_uninitialized.h:76:9: note: parameter passing for argument of type ‘std::move_iterator<GuidingPulse*>’ changed in GCC 7.1
+[ 95%] Building CXX object libs/indibase/alignment/CMakeFiles/indi_skywatcherAltAzMount.dir/__/__/__/drivers/telescope/skywatcherAPI.cpp.o
+[ 96%] Linking CXX executable indi_skywatcherAltAzMount
+[ 96%] Built target indi_skywatcherAltAzMount
+Scanning dependencies of target indi_skywatcherAltAzSimple
+[ 96%] Building CXX object libs/indibase/alignment/CMakeFiles/indi_skywatcherAltAzSimple.dir/__/__/__/drivers/telescope/skywatcherAltAzSimple.cpp.o
+[ 96%] Building CXX object libs/indibase/alignment/CMakeFiles/indi_skywatcherAltAzSimple.dir/__/__/__/drivers/telescope/skywatcherAPI.cpp.o
+[ 96%] Linking CXX executable indi_skywatcherAltAzSimple
+[ 96%] Built target indi_skywatcherAltAzSimple
+Scanning dependencies of target tutorial_one
+[ 97%] Building CXX object examples/tutorial_one/CMakeFiles/tutorial_one.dir/simpledevice.cpp.o
+[ 97%] Linking CXX executable tutorial_one
+[ 97%] Built target tutorial_one
+Scanning dependencies of target tutorial_two
+[ 97%] Building CXX object examples/tutorial_two/CMakeFiles/tutorial_two.dir/simplescope.cpp.o
+[ 98%] Linking CXX executable tutorial_two
+[ 98%] Built target tutorial_two
+Scanning dependencies of target tutorial_three
+[ 98%] Building CXX object examples/tutorial_three/CMakeFiles/tutorial_three.dir/simpleccd.cpp.o
+[ 98%] Linking CXX executable tutorial_three
+[ 98%] Built target tutorial_three
+Scanning dependencies of target tutorial_four
+[ 98%] Building CXX object examples/tutorial_four/CMakeFiles/tutorial_four.dir/simpleskeleton.cpp.o
+[ 98%] Linking CXX executable tutorial_four
+[ 98%] Built target tutorial_four
+Scanning dependencies of target tutorial_rain
+[ 98%] Building CXX object examples/tutorial_five/CMakeFiles/tutorial_rain.dir/raindetector.cpp.o
+[ 98%] Linking CXX executable tutorial_rain
+[ 98%] Built target tutorial_rain
+Scanning dependencies of target tutorial_dome
+[ 98%] Building CXX object examples/tutorial_five/CMakeFiles/tutorial_dome.dir/dome.cpp.o
+[ 98%] Linking CXX executable tutorial_dome
+[ 98%] Built target tutorial_dome
+Scanning dependencies of target tutorial_client
+[ 98%] Building CXX object examples/tutorial_six/CMakeFiles/tutorial_client.dir/tutorial_client.cpp.o
+[ 98%] Linking CXX executable tutorial_client
+[ 98%] Built target tutorial_client
+Scanning dependencies of target tutorial_seven
+[ 98%] Building CXX object examples/tutorial_seven/CMakeFiles/tutorial_seven.dir/simple_telescope_simulator.cpp.o
+In file included from /usr/include/c++/8/vector:64,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/examples/tutorial_seven/simple_telescope_simulator.h:5,
+                 from /home/astroberry/git/indi/examples/tutorial_seven/simple_telescope_simulator.cpp:14:
+/usr/include/c++/8/bits/stl_vector.h: In member function ‘void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/stl_vector.h:1085:4: note: parameter passing for argument of type ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’ changed in GCC 7.1
+    _M_realloc_insert(end(), __x);
+    ^~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/8/vector:69,
+                 from /home/astroberry/git/indi/libs/indibase/basedevice.h:25,
+                 from /home/astroberry/git/indi/libs/indibase/defaultdevice.h:21,
+                 from /home/astroberry/git/indi/libs/indibase/inditelescope.h:21,
+                 from /home/astroberry/git/indi/examples/tutorial_seven/simple_telescope_simulator.h:5,
+                 from /home/astroberry/git/indi/examples/tutorial_seven/simple_telescope_simulator.cpp:14:
+/usr/include/c++/8/bits/vector.tcc: In member function ‘void std::vector<_Tp, _Alloc>::_M_realloc_insert(std::vector<_Tp, _Alloc>::iterator, _Args&& ...) [with _Args = {const INDI::AlignmentSubsystem::AlignmentDatabaseEntry&}; _Tp = INDI::AlignmentSubsystem::AlignmentDatabaseEntry; _Alloc = std::allocator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>]’:
+/usr/include/c++/8/bits/vector.tcc:413:7: note: parameter passing for argument of type ‘std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry>::iterator’ {aka ‘__gnu_cxx::__normal_iterator<INDI::AlignmentSubsystem::AlignmentDatabaseEntry*, std::vector<INDI::AlignmentSubsystem::AlignmentDatabaseEntry> >’} changed in GCC 7.1
+       vector<_Tp, _Alloc>::
+       ^~~~~~~~~~~~~~~~~~~
+[ 99%] Linking CXX executable tutorial_seven
+[ 99%] Built target tutorial_seven
+Scanning dependencies of target tutorial_eight
+[100%] Building CXX object examples/tutorial_eight/CMakeFiles/tutorial_eight.dir/simple_spectrograph.cpp.o
+[100%] Linking CXX executable tutorial_eight
+[100%] Built target tutorial_eight
+22:19:12: The process "/usr/bin/cmake" exited normally.
+22:19:12: Running steps for project indi_raspistill...
+22:19:12: Starting: "/usr/bin/cmake" --build . --target all
+Scanning dependencies of target indi_raspistill
+[  8%] Building CXX object CMakeFiles/indi_raspistill.dir/src/indi_mmal.o
+[ 16%] Building CXX object CMakeFiles/indi_raspistill.dir/src/mmaldriver.o
+[ 25%] Linking CXX executable indi_raspistill
+[ 33%] Built target indi_raspistill
+[ 41%] Performing update step for 'userland'
+[ 50%] Performing configure step for 'userland'
+CMake Warning at makefiles/cmake/arm-linux.cmake:5 (message):
+    *********************************************************
+    *   CMAKE_TOOLCHAIN_FILE not defined                    *
+    *   This is correct for compiling on the Raspberry Pi   *
+    *                                                       *
+    *   If you are cross-compiling on some other machine    *
+    *   then DELETE the build directory and re-run with:    *
+    *   -DCMAKE_TOOLCHAIN_FILE=toolchain_file.cmake         *
+    *                                                       *
+    *   Toolchain files are in makefiles/cmake/toolchains.  *
+    *********************************************************
+Call Stack (most recent call first):
+  CMakeLists.txt:20 (include)
+
+
+fatal: not a git repository (or any of the parent directories): .git
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/astroberry/git/build-indi_raspistill-Desktop-Debug/userland-prefix/src/userland-build
+[ 58%] Performing build step for 'userland'
+[ 14%] Built target vcos
+[ 14%] Built target vcsm
+[ 18%] Built target vchiq_arm
+[ 25%] Built target vchostif
+[ 33%] Built target khrn_client
+[ 37%] Built target bcm_host
+[ 62%] Built target brcmEGL
+[ 62%] Built target brcmGLESv2
+[ 74%] Built target mmal_core
+[ 81%] Built target mmal_util
+[ 85%] Built target mmal_vc_client
+[100%] Built target raspistill
+[ 66%] No install step for 'userland'
+[ 75%] Completed 'userland'
+[100%] Built target userland
+22:19:25: The process "/usr/bin/cmake" exited normally.
+22:19:25: Elapsed time: 07:05.

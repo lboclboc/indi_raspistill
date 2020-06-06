@@ -1,2 +1,3 @@
 - ISO-settings
 - Binning
+- CFA property

@@ -180,6 +180,7 @@ find_path(
     ${PC_INDI_INCLUDE_DIR}
     ${_obIncDir}
     ${GNUWIN32_DIR}/include
+    /usr/local/include
     HINTS ${${INDI_PRIVATE_VAR_NS}_ROOT}
     DOC "Include directory for INDI"
 )
