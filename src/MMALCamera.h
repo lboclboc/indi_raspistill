@@ -36,13 +36,18 @@ private:
     void setup_capture_port();
     void setup_preview_port();
 //    MMAL_STATUS_T connect_ports(MMAL_PORT_T *output_port, MMAL_PORT_T *input_port, MMAL_CONNECTION_T **connection);
+    void get_sensor_defaults(int camera_num, char *camera_name, size_t len, uint32_t *width, uint32_t *height);
 
     MMAL_POOL_T *pool {};
     FILE *file_handle {};
     VCOS_SEMAPHORE_T complete_semaphore {};
     MMAL_COMPONENT_T *camera  {};
     int cameraNum {};
-    long shutter_speed;
+    char cameraName[MMAL_PARAMETER_CAMERA_INFO_MAX_STR_LEN] {};
+    long shutter_speed {100000};
+    unsigned int iso {100};
+    uint32_t width {};
+    uint32_t height {};
 
     friend void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 };

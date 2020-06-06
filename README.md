@@ -23,7 +23,23 @@ Pixels are ordered by | Bm | Gm | Bl+Gl |
 
 m : MSB 8 bits, l = LSB 4 bits
 
-Debugging
----------
-
+MMAL Debugging
+--------------
 Debug camera by adding dtdebug=1 to /boot/config.txt, reboot and run sudo vcdbg log assert
+
+Tune up logging levels:
+    vcgencmd set_logging level=3072
+
+Log messages:
+    vcdbg log msg
+
+Set logging level for category:
+    vcdbg log level <category> e w i t
+
+Available commands to vcgencmd:
+    vcgencmd commands
+
+Displays the error log status of the various VideoCore software areas:
+    vcgencmd vcos log status
+
+More info: https://github.com/nezticle/RaspberryPi-BuildRoot/wiki/VideoCore-Tools

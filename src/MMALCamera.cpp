@@ -12,7 +12,6 @@
 
 MMALCamera::MMALException::MMALException(const char *text) : std::runtime_error(text)
 {
-
 }
 
 
@@ -31,7 +30,7 @@ void  MMALCamera::MMALException::throw_if(bool status, const char *text)
 
 MMALCamera::MMALCamera(int n) : cameraNum(n)
 {
-
+    get_sensor_defaults(cameraNum, cameraName, sizeof cameraName, &width, &height);
 }
 
 MMALCamera::~MMALCamera()
@@ -173,12 +172,12 @@ void MMALCamera::setup_capture_port()
     MMAL_ES_FORMAT_T *format {port->format};
     format->encoding = MMAL_ENCODING_OPAQUE;
     format->encoding_variant = MMAL_ENCODING_I420;
-    format->es->video.width = 4056;
-    format->es->video.height = 3040;
+    format->es->video.width = width;
+    format->es->video.height = height;
     format->es->video.crop.x = 0;
     format->es->video.crop.y = 0;
-    format->es->video.crop.width = 4056;
-    format->es->video.crop.height = 3040;
+    format->es->video.crop.width = width;
+    format->es->video.crop.height = height;
     format->es->video.frame_rate.num = 0;
     format->es->video.frame_rate.den = 1;
     format->es->video.par.num = 1;
@@ -232,13 +231,13 @@ void MMALCamera::create_camera_component()
         {
             MMAL_PARAMETER_CAMERA_CONFIG_T cam_config = {
                 { MMAL_PARAMETER_CAMERA_CONFIG, sizeof(cam_config) },
-                .max_stills_w = 4056, //FIXME: Get it dynamically instead.
-                .max_stills_h = 3040,
-                .stills_yuv422 = 1,
+                .max_stills_w = width, //FIXME: Get it dynamically instead.
+                .max_stills_h = height,
+                .stills_yuv422 = 0,
                 .one_shot_stills = 1,
-                .max_preview_video_w = 0,
-                .max_preview_video_h = 0,
-                .num_preview_video_frames = 0,
+                .max_preview_video_w = 1024,
+                .max_preview_video_h = 768,
+                .num_preview_video_frames = 3,
                 .stills_capture_circular_buffer_height = 0,
                 .fast_preview_resume = 0,
                 .use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RESET_STC
@@ -267,10 +266,8 @@ void MMALCamera::create_camera_component()
         MMALException::throw_if(!pool, "Failed to create buffer header pool for camera output port");
 
         // Close un-used ports.
-        if (camera->output[VIDEO_PORT]->is_enabled)
-           MMALException::throw_if(mmal_port_disable(camera->output[VIDEO_PORT]) != MMAL_SUCCESS, "Failed to disable video port");
-        if (camera->output[PREVIEW_PORT]->is_enabled)
-           MMALException::throw_if(mmal_port_disable(camera->output[PREVIEW_PORT]) != MMAL_SUCCESS, "Failed to disable preview port");
+        mmal_port_disable(camera->output[VIDEO_PORT]);
+        mmal_port_disable(camera->output[PREVIEW_PORT]);
     }
     catch(MMALException &e)
     {
@@ -338,6 +335,10 @@ int MMALCamera::capture(long speed, int iso)
     /* Enable component */
     status = mmal_component_enable(camera);
     MMALException::throw_if(status != MMAL_SUCCESS, "camera component couldn't be enabled");
+
+    /* Create pool of buffer headers for the output port to consume */
+    pool = mmal_port_pool_create(camera->output[CAPTURE_PORT], camera->output[CAPTURE_PORT]->buffer_num, camera->output[CAPTURE_PORT]->buffer_size);
+    MMALException::throw_if(pool == nullptr, "Failed to allocate buffer pool");
 
     // Open the file
     file_handle = fopen(filename, "wb");
@@ -436,6 +437,53 @@ MMAL_STATUS_T MMALCamera::connect_ports(MMAL_PORT_T *output_port, MMAL_PORT_T *i
    return status;
 }
 #endif
+
+/**
+ * @brief MMALCamera::get_sensor_defaults gets default parameters for camrea.
+ * @param camera_num
+ * @param camera_name
+ * @param len Length of camera_name string
+ * @param width
+ * @param height
+ */
+void MMALCamera::get_sensor_defaults(int camera_num, char *camera_name, size_t len, uint32_t *width, uint32_t *height)
+{
+   MMAL_COMPONENT_T *camera_info;
+   MMAL_STATUS_T status;
+
+   // Default to the OV5647 setup
+   strncpy(camera_name, "OV5647", len);
+
+   // Try to get the camera name and maximum supported resolution
+   status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA_INFO, &camera_info);
+   MMALException::throw_if(status != MMAL_SUCCESS, "Failed to create camera component");
+
+   MMAL_PARAMETER_CAMERA_INFO_T param;
+   param.hdr.id = MMAL_PARAMETER_CAMERA_INFO;
+   param.hdr.size = sizeof(param)-4;  // Deliberately undersize to check firmware version
+   status = mmal_port_parameter_get(camera_info->control, &param.hdr);
+
+   if (status != MMAL_SUCCESS)
+   {
+       // Running on newer firmware
+       param.hdr.size = sizeof(param);
+       status = mmal_port_parameter_get(camera_info->control, &param.hdr);
+       MMALException::throw_if(status != MMAL_SUCCESS, "Failed to get camera parameters.");
+       MMALException::throw_if(param.num_cameras <= camera_num, "Camera number not found.");
+      // Take the parameters from the first camera listed.
+      *width = param.cameras[camera_num].max_width;
+      *height = param.cameras[camera_num].max_height;
+      strncpy(camera_name, param.cameras[camera_num].camera_name, MMAL_PARAMETER_CAMERA_INFO_MAX_STR_LEN);
+      camera_name[MMAL_PARAMETER_CAMERA_INFO_MAX_STR_LEN-1] = 0;
+   }
+   else {
+       // default to OV5647 if nothing detected..
+      *width = 2592;
+      *height = 1944;
+   }
+
+   mmal_component_destroy(camera_info);
+}
 
 int main(int argc, char **argv)
 {
