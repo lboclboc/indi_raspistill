@@ -170,7 +170,7 @@ void MMALCamera::setup_capture_port()
 
     // Set our stills format on the stills (for encoder) port
     MMAL_ES_FORMAT_T *format {port->format};
-    format->encoding = MMAL_ENCODING_OPAQUE;
+    format->encoding = MMAL_ENCODING_I420;
     format->encoding_variant = MMAL_ENCODING_I420;
     format->es->video.width = width;
     format->es->video.height = height;
@@ -233,7 +233,7 @@ void MMALCamera::create_camera_component()
                 { MMAL_PARAMETER_CAMERA_CONFIG, sizeof(cam_config) },
                 .max_stills_w = width, //FIXME: Get it dynamically instead.
                 .max_stills_h = height,
-                .stills_yuv422 = 0,
+                .stills_yuv422 = 1,
                 .one_shot_stills = 1,
                 .max_preview_video_w = 1024,
                 .max_preview_video_h = 768,
@@ -266,8 +266,8 @@ void MMALCamera::create_camera_component()
         MMALException::throw_if(!pool, "Failed to create buffer header pool for camera output port");
 
         // Close un-used ports.
-        mmal_port_disable(camera->output[VIDEO_PORT]);
-        mmal_port_disable(camera->output[PREVIEW_PORT]);
+//        mmal_port_disable(camera->output[VIDEO_PORT]);
+//        mmal_port_disable(camera->output[PREVIEW_PORT]);
     }
     catch(MMALException &e)
     {
