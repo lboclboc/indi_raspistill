@@ -45,13 +45,12 @@ private:
     void set_camera_parameters();
 
     MMAL_POOL_T *pool {};
-    FILE *file_handle {};
     VCOS_SEMAPHORE_T complete_semaphore {};
     MMAL_COMPONENT_T *camera  {};
     int32_t cameraNum {};
     char cameraName[MMAL_PARAMETER_CAMERA_INFO_MAX_STR_LEN] {};
     uint32_t shutter_speed {100000};
-    unsigned int iso {100};
+    unsigned int iso {0};
     double gain {1};
     uint32_t width {};
     uint32_t height {};

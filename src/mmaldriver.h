@@ -21,7 +21,7 @@ public:
     virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n) override;
 
     // MMALListener overrides.
-    virtual void buffer_received(uint8_t *buffer, size_t length) override;
+    virtual void buffer_received(uint8_t *buffer, size_t length, uint32_t pitch) override;
 
 protected:
     // INDI::CCD overrides.

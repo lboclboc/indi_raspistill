@@ -54,6 +54,7 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
     INDI::CCD::addFITSKeywords(fptr, targetChip);
 
 #ifdef USE_ISO // FIXME
+    int status = 0;
     if (mIsoSP.nsp > 0)
     {
         ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
@@ -92,7 +93,8 @@ bool MMALDriver::Connect()
         return false;
     }
     SetCCDParams(static_cast<int>(camera->get_width()), static_cast<int>(camera->get_height()), 16, pixel_size_x, pixel_size_y);
-// Should not be called by the client:    UpdateCCDFrame(0, 0, static_cast<int>(camera->get_width()), static_cast<int>(camera->get_height()));
+    // Should really not be called by the client.
+    UpdateCCDFrame(0, 0, static_cast<int>(camera->get_width()), static_cast<int>(camera->get_height()));
 
     return true;
 }
@@ -141,9 +143,7 @@ bool MMALDriver::initProperties()
 
     // CCD Gain
     IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1);
-    IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
-
-// FIXME: Use defined constant.    IUSaveText(&BayerT[2], "BGGR");
+    IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", IMAGE_SETTINGS_TAB, IP_RW, 60, IPS_IDLE);
 
     addDebugControl();
 
@@ -171,6 +171,8 @@ bool MMALDriver::updateProperties()
 {
 	// We must ALWAYS call the parent class updateProperties() first
     INDI::CCD::updateProperties();
+
+    IUSaveText(&BayerT[2], "BGGR");
 
     LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
 
@@ -211,6 +213,7 @@ bool MMALDriver::UpdateCCDBin(int hor, int ver)
 bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
 {
 	LOGF_DEBUG("UpdateCCDFrame(%d, %d, %d, %d", x, y, w, h);
+fprintf(stderr, "UpdateCCDFrame(%d, %d, %d, %d", x, y, w, h);
 
     // FIXME: handle cropping
     if (x + y != 0) {
@@ -364,6 +367,7 @@ void MMALDriver::grabImage()
     try {
         camera->set_iso(isoSpeed);
         camera->set_gain(gain);
+        camera->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
         camera->capture();
     } catch (MMALCamera::MMALException e) {
         fprintf(stderr, "Caugh camera exception: %s\n", e.what());
@@ -380,19 +384,23 @@ void MMALDriver::grabImage()
  * @brief MMALDriver::buffer_received Gets called when a new buffer is received from the camera.
  * This method convers the pixels if needed and stores the recived pixel into the primary
  * frame buffer.
- * Assumes that it will be called ones for every row.
+ * Assumes that it will be called with complete rows.
  * @param buffer
  */
-void MMALDriver::buffer_received(uint8_t *buffer, size_t length)
+void MMALDriver::buffer_received(uint8_t *buffer, size_t length, uint32_t pitch)
 {
     std::unique_lock<std::mutex> guard(ccdBufferLock);
 
-    size_t n_bytes = camera->get_width() * 2; // 16-bits.
+    uint8_t *end_of_image = PrimaryCCD.getFrameBuffer() + PrimaryCCD.getFrameBufferSize();
 
-    assert(length >= 2 * camera->get_width());
-    assert(PrimaryCCD.getFrameBuffer() + PrimaryCCD.getFrameBufferSize() >= image_buffer_pointer + n_bytes );
-
-    memcpy(image_buffer_pointer, buffer, n_bytes);
+    for(uint8_t *row = buffer; row < buffer + length; row += pitch)
+    {
+        size_t n_bytes = camera->get_width() * 2; // 16-bits.
+        assert(length >= n_bytes);
+        assert(end_of_image >= image_buffer_pointer + n_bytes );
+        memcpy(image_buffer_pointer, row, n_bytes);
+        image_buffer_pointer += n_bytes;
+    }
 
     guard.unlock();
 }
