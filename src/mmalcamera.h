@@ -41,8 +41,9 @@ private:
     void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
     void create_camera_component();
     void setup_capture_port();
-    void get_sensor_defaults();
+    void get_sensor_size();
     void set_camera_parameters();
+    static void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 
     MMAL_POOL_T *pool {};
     VCOS_SEMAPHORE_T complete_semaphore {};
@@ -55,6 +56,7 @@ private:
     uint32_t width {};
     uint32_t height {};
     std::vector<MMALListener *>listeners {};
+    MMAL_RATIONAL_T fps_low {}, fps_high {};
 
     friend void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 };

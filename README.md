@@ -51,3 +51,24 @@ Displays the error log status of the various VideoCore software areas:
     vcgencmd vcos log status
 
 More info: https://github.com/nezticle/RaspberryPi-BuildRoot/wiki/VideoCore-Tools
+
+Other info
+----------
+The camera still port supports follwing encodings:
+encodings	@0xbefff29c	MMAL_FOURCC_T[25]
+    [0] 	(hex) 30323449	MMAL_FOURCC_T I420
+    [1] 	(hex) 3231564e	MMAL_FOURCC_T NV12
+    [2] 	(hex) 32323449	MMAL_FOURCC_T I422
+    [3] 	(hex) 56595559	MMAL_FOURCC_T YUYV
+    [4] 	(hex) 55595659	MMAL_FOURCC_T YVYU
+    [5] 	(hex) 59555956	MMAL_FOURCC_T VYUY
+    [6] 	(hex) 59565955	MMAL_FOURCC_T UYVY
+    [7] 	(hex) 33424752	MMAL_FOURCC_T RGB3
+    [8] 	(hex) 41424752	MMAL_FOURCC_T RGBA
+    [9] 	(hex) 32424752	MMAL_FOURCC_T RGB2
+    [10]	(hex) 32315659	MMAL_FOURCC_T YV12
+    [11]	(hex) 3132564e	MMAL_FOURCC_T NV21
+    [12]	(hex) 33524742	MMAL_FOURCC_T BGR3
+    [13]	(hex) 41524742	MMAL_FOURCC_T BGRA
+    [14]	(hex) 5651504f	MMAL_FOURCC_T OPQV
+
