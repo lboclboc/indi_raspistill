@@ -32,18 +32,11 @@ MMALCamera::MMALCamera(int n) : cameraNum(n)
 {
     // Register our application with the logging system
     vcos_log_register("RaspiStill", VCOS_LOG_CATEGORY);
-
-    create_camera_component();
 }
 
 MMALCamera::~MMALCamera()
 {
-    if (camera) {
-        fprintf(stderr, "%s(%s): destroying camera object.\n", __FILE__, __func__);
-        mmal_component_disable(camera);
-        mmal_component_destroy(camera);
-        camera = nullptr;
-    }
+
 }
 
 /**
@@ -104,7 +97,7 @@ void MMALCamera::callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
         }
     }
     else  {
-        fprintf(stderr, "Other port\n");
+        fprintf(stderr, "%s(%s): unsupported port type: %d\n", __FILE__, __func__, port->type);
     }
 }
 
@@ -123,22 +116,22 @@ void MMALCamera::create_camera_component()
 
     /* Create the component */
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Failed to create camera component");
+    MMALException::throw_if(status, "Failed to create camera component");
     camera->userdata = this; // c_callback needs this to find this object.
 
     get_sensor_size();
 
     MMAL_PARAMETER_INT32_T camera_num_param = {{MMAL_PARAMETER_CAMERA_NUM, sizeof(camera_num_param)}, cameraNum};
     status = mmal_port_parameter_set(camera->control, &camera_num_param.hdr);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Could not select camera");
+    MMALException::throw_if(status, "Could not select camera");
     MMALException::throw_if(camera->output_num == 0, "Camera doesn't have output ports");
 
     status = mmal_port_parameter_set_uint32(camera->control, MMAL_PARAMETER_CAMERA_CUSTOM_SENSOR_CONFIG, 0);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Could not set sensor mode");
+    MMALException::throw_if(status, "Could not set sensor mode");
 
     // Enable the camera, and tell it its control callback function
     status = mmal_port_enable(camera->control, c_callback);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Unable to enable control port");
+    MMALException::throw_if(status, "Unable to enable control port");
 
     //  set up the camera configuration
     {
@@ -147,7 +140,7 @@ void MMALCamera::create_camera_component()
         cam_config.hdr.size = sizeof cam_config;
         cam_config.max_stills_w = width;
         cam_config.max_stills_h = height;
-        cam_config.stills_yuv422 = 0;
+        cam_config.stills_yuv422 = 1;  // Needs to be one for MMAL_ENCODING_I422_SLICE
         cam_config.one_shot_stills = 1;
         cam_config.max_preview_video_w = 1024;
         cam_config.max_preview_video_h = 768;
@@ -161,13 +154,10 @@ void MMALCamera::create_camera_component()
         fprintf(stderr, "Size set to %dx%d\n", cam_config.max_stills_w, cam_config.max_stills_h);
     }
 
- //    MMALException::throw_if(mmal_port_disable(camera->port[PREVIEW_PORT]), "Failed to disable preview port");
- //   MMALException::throw_if(mmal_port_disable(camera->port[VIDEO_PORT]), "Failed to disable video port");
-
     // Save cameras default FPG range.
     MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)}, {0, 0}, {0, 0}};
     status = mmal_port_parameter_get(camera->output[MMAL_CAMERA_CAPTURE_PORT], &fps_range.hdr);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Failed to get FPS range");
+    MMALException::throw_if(status, "Failed to get FPS range");
 
     fps_low = fps_range.fps_low;
     fps_high = fps_range.fps_high;
@@ -188,30 +178,26 @@ int MMALCamera::capture()
     MMAL_STATUS_T status = MMAL_SUCCESS;
     VCOS_STATUS_T vcos_status;
 
-    // Set all necessary camera parameters (control-port) and enable camera.
+    create_camera_component();
+
     set_camera_parameters();
-
-    camera->port[MMAL_CAMERA_CAPTURE_PORT]->buffer_size = camera->port[MMAL_CAMERA_CAPTURE_PORT]->buffer_size_recommended;
-
-    MMALException::throw_if(mmal_port_parameter_set_boolean(camera->output[MMAL_CAMERA_VIDEO_PORT], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE), "Failed to turn on zero-copy for video port");
 
     set_capture_port_format();
 
-    // Enable the camera.
     status = mmal_component_enable(camera);
-    MMALException::throw_if(status != MMAL_SUCCESS, "camera component couldn't be enabled");
+    MMALException::throw_if(status, "camera component couldn't be enabled");
 
-    // Signalling semaphore.
+    // Signalling semaphore used in the callback function.
     vcos_status = vcos_semaphore_create(&complete_semaphore, "RaspiStill-sem", 0);
-    MMALException::throw_if(vcos_status != VCOS_SUCCESS, "Failed to create semaphore");
+    MMALException::throw_if(vcos_status, "Failed to create semaphore");
 
     // Create pool of buffer headers.
     pool = mmal_port_pool_create(camera->output[MMAL_CAMERA_CAPTURE_PORT], camera->output[MMAL_CAMERA_CAPTURE_PORT]->buffer_num, camera->output[MMAL_CAMERA_CAPTURE_PORT]->buffer_size);
     MMALException::throw_if(pool == nullptr, "Failed to allocate buffer pool");
 
-    // Enable the camera output port and tell it its callback function
+    // Enable the camera output port and register it its callback function
     status = mmal_port_enable(camera->output[MMAL_CAMERA_CAPTURE_PORT], c_callback);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Failed to enable capture port");
+    MMALException::throw_if(status, "Failed to enable capture port");
 
     status = mmal_port_parameter_set_uint32(camera->control, MMAL_PARAMETER_SHUTTER_SPEED, shutter_speed);
     MMALException::throw_if(status, "Failed to set shutter speed");
@@ -220,33 +206,31 @@ int MMALCamera::capture()
     for (unsigned int q = 0; q < num; q++)
     {
         MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(pool->queue);
-
-        if (!buffer)
-            vcos_log_error("Unable to get a required buffer %d from pool queue", q);
-
-        if (mmal_port_send_buffer(camera->output[MMAL_CAMERA_CAPTURE_PORT], buffer)!= MMAL_SUCCESS)
-            vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
+        MMALException::throw_if(buffer == nullptr, "Failed to get pool buffer");
+        status = mmal_port_send_buffer(camera->output[MMAL_CAMERA_CAPTURE_PORT], buffer);
+        MMALException::throw_if(status, "Failed to send buffer to port");
     }
 
-
     status = mmal_port_parameter_set_boolean(camera->output[MMAL_CAMERA_CAPTURE_PORT], MMAL_PARAMETER_CAPTURE, 1);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Failed to start capture");
+    MMALException::throw_if(status, "Failed to start capture");
 
     // Wait for capture to complete
-    // For some reason using vcos_semaphore_wait_timeout sometimes returns immediately with bad parameter error
-    // even though it appears to be all correct, so reverting to untimed one until figure out why its erratic
     vcos_semaphore_wait(&complete_semaphore);
 
     vcos_semaphore_delete(&complete_semaphore);
 
     status = mmal_port_disable(camera->output[MMAL_CAMERA_CAPTURE_PORT]);
-    MMALException::throw_if(status != MMAL_SUCCESS, "Failed to disable capture port");
+    MMALException::throw_if(status, "Failed to disable capture port");
 
     status = mmal_component_disable(camera);
-    MMALException::throw_if(status != MMAL_SUCCESS, "camera component couldn't be disabled");
+    MMALException::throw_if(status, "camera component couldn't be disabled");
 
     mmal_port_pool_destroy(camera->output[MMAL_CAMERA_CAPTURE_PORT], pool);
     pool = nullptr;
+
+    mmal_component_disable(camera);
+    mmal_component_destroy(camera);
+    camera = nullptr;
 
     return exit_code;
 }
@@ -277,6 +261,10 @@ void MMALCamera::set_camera_parameters()
         crop.rect.height = (0x10000);
         MMALException::throw_if(mmal_port_parameter_set(camera->control, &crop.hdr), "Failed to set ROI");
     }
+
+    camera->port[MMAL_CAMERA_CAPTURE_PORT]->buffer_size = camera->port[MMAL_CAMERA_CAPTURE_PORT]->buffer_size_recommended;
+
+    MMALException::throw_if(mmal_port_parameter_set_boolean(camera->output[MMAL_CAMERA_VIDEO_PORT], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE), "Failed to turn on zero-copy for video port");
 }
 
 void MMALCamera::set_capture_port_format()
@@ -312,14 +300,13 @@ void MMALCamera::set_capture_port_format()
     MMAL_ES_FORMAT_T *format {camera->output[MMAL_CAMERA_CAPTURE_PORT]->format};
 // WORKS    format->encoding = MMAL_ENCODING_I420_SLICE; format->encoding_variant = MMAL_ENCODING_I420;
 // BW image:   format->encoding = MMAL_ENCODING_RGB16_SLICE;
-//    format->encoding = MMAL_ENCODING_RGB16;
-// NOPE    format->encoding = MMAL_ENCODING_RGB24;
-// WORKS: 8bit*3    format->encoding = MMAL_ENCODING_RGB24_SLICE;
 // WORKS: not raw     format->encoding = MMAL_ENCODING_I420_SLICE;
 // WORKLS    format->encoding = MMAL_ENCODING_I422_SLICE; format->encoding_variant = 0;
 // HANGS    format->encoding = MMAL_ENCODING_OPAQUE;
 
-    format->encoding = MMAL_ENCODING_RGB24; format->encoding_variant = 0;
+// Same as raspiyuv -rgb:    format->encoding = MMAL_ENCODING_RGB24; format->encoding_variant = 0;
+    // 16 LE gray format: format->encoding = MMAL_ENCODING_RGB16; format->encoding_variant = 0;
+    format->encoding = MMAL_ENCODING_I422_SLICE; format->encoding_variant = 0;
 
     if (!mmal_util_rgb_order_fixed(camera->output[MMAL_CAMERA_CAPTURE_PORT]))
     {
@@ -342,7 +329,7 @@ void MMALCamera::set_capture_port_format()
     format->es->video.par.den = 1;
 
     status = mmal_port_format_commit(camera->output[MMAL_CAMERA_CAPTURE_PORT]);
-    MMALException::throw_if(status != MMAL_SUCCESS, "camera capture port format couldn't be set");
+    MMALException::throw_if(status, "camera capture port format couldn't be set");
 }
 
 /**
@@ -374,7 +361,7 @@ void MMALCamera::get_sensor_size()
        // Running on newer firmware
        param.hdr.size = sizeof(param);
        status = mmal_port_parameter_get(camera_info->control, &param.hdr);
-       MMALException::throw_if(status != MMAL_SUCCESS, "Failed to get camera parameters.");
+       MMALException::throw_if(status, "Failed to get camera parameters.");
        MMALException::throw_if(param.num_cameras <= static_cast<uint32_t>(cameraNum), "Camera number not found.");
       // Take the parameters from the first camera listed.
       width = param.cameras[cameraNum].max_width;
