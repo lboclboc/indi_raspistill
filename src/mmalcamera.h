@@ -18,10 +18,6 @@ public:
         static void throw_if(bool status, const char *text);
     };
 
-    static const int PREVIEW_PORT {0};
-    static const int VIDEO_PORT {1};
-    static const int CAPTURE_PORT {2};
-
     MMALCamera(int cameraNum = 0);
     virtual ~MMALCamera();
     static const int MMAL_CAMERA_PREVIEW_PORT {0};
@@ -40,7 +36,7 @@ public:
 private:
     void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
     void create_camera_component();
-    void setup_capture_port();
+    void set_capture_port_format();
     void get_sensor_size();
     void set_camera_parameters();
     static void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
