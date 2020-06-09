@@ -1,6 +1,7 @@
 /**
  * INDI driver for Raspberry Pi 12Mp High Quality camera.
  */
+#include <algorithm>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
@@ -106,7 +107,7 @@ bool MMALDriver::Disconnect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device disconnected successfully!");
 
-    camera.release();
+    camera.reset(nullptr);
 
     return true;
 }
@@ -225,6 +226,8 @@ fprintf(stderr, "UpdateCCDFrame(%d, %d, %d, %d", x, y, w, h);
     int yRes = PrimaryCCD.getYRes();
     int bpp = PrimaryCCD.getBPP();
     int nbuf = (xRes * yRes * (bpp / 8));
+    // If I422, we need double that for UV data. FIXME
+    nbuf *= 2;
 
     LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
 
@@ -393,13 +396,15 @@ void MMALDriver::buffer_received(uint8_t *buffer, size_t length, uint32_t pitch)
 
     uint8_t *end_of_image = PrimaryCCD.getFrameBuffer() + PrimaryCCD.getFrameBufferSize();
 
-    for(uint8_t *row = buffer; row < buffer + length; row += pitch)
+    uint32_t max_x = std::min(static_cast<uint32_t>(PrimaryCCD.getXRes()), pitch);
+
+    for(uint8_t *row = buffer; row < buffer + length - pitch; row += pitch)
     {
-        size_t n_bytes = camera->get_width() * 2; // 16-bits.
-        assert(length >= n_bytes);
-        assert(end_of_image >= image_buffer_pointer + n_bytes );
-        memcpy(image_buffer_pointer, row, n_bytes);
-        image_buffer_pointer += n_bytes;
+        for(uint32_t x = 0; x <  max_x && image_buffer_pointer < end_of_image; x++)
+        {
+            *image_buffer_pointer++ = 0;        // LSB
+            *image_buffer_pointer++ = row[x];   // MSB
+        }
     }
 
     guard.unlock();

@@ -1,4 +1,3 @@
-//#include "RaspiStill-fixed.c"
 #define MMAL_COMPONENT_USERDATA_T MMALCamera // NOt quite C++ but thats how its supposed to be used I think.
 
 #include <stdio.h>
@@ -32,11 +31,19 @@ MMALCamera::MMALCamera(int n) : cameraNum(n)
 {
     // Register our application with the logging system
     vcos_log_register("RaspiStill", VCOS_LOG_CATEGORY);
+
+    create_camera_component();
+    fprintf(stderr, "Camera component created\n");
 }
 
 MMALCamera::~MMALCamera()
 {
-
+    if (camera) {
+        mmal_component_disable(camera);
+        mmal_component_destroy(camera);
+        camera = nullptr;
+        fprintf(stderr, "Camera component disabled and destroyed\n");
+    }
 }
 
 /**
@@ -111,15 +118,12 @@ void MMALCamera::callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
  */
 void MMALCamera::create_camera_component()
 {
-
     MMAL_STATUS_T status = MMAL_EINVAL;
 
     /* Create the component */
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera);
     MMALException::throw_if(status, "Failed to create camera component");
     camera->userdata = this; // c_callback needs this to find this object.
-
-    get_sensor_size();
 
     MMAL_PARAMETER_INT32_T camera_num_param = {{MMAL_PARAMETER_CAMERA_NUM, sizeof(camera_num_param)}, cameraNum};
     status = mmal_port_parameter_set(camera->control, &camera_num_param.hdr);
@@ -132,6 +136,8 @@ void MMALCamera::create_camera_component()
     // Enable the camera, and tell it its control callback function
     status = mmal_port_enable(camera->control, c_callback);
     MMALException::throw_if(status, "Unable to enable control port");
+
+    get_sensor_info();
 
     //  set up the camera configuration
     {
@@ -177,8 +183,6 @@ int MMALCamera::capture()
     int exit_code = 0;
     MMAL_STATUS_T status = MMAL_SUCCESS;
     VCOS_STATUS_T vcos_status;
-
-    create_camera_component();
 
     set_camera_parameters();
 
@@ -227,10 +231,6 @@ int MMALCamera::capture()
 
     mmal_port_pool_destroy(camera->output[MMAL_CAMERA_CAPTURE_PORT], pool);
     pool = nullptr;
-
-    mmal_component_disable(camera);
-    mmal_component_destroy(camera);
-    camera = nullptr;
 
     return exit_code;
 }
@@ -340,7 +340,7 @@ void MMALCamera::set_capture_port_format()
  * @param width
  * @param height
  */
-void MMALCamera::get_sensor_size()
+void MMALCamera::get_sensor_info()
 {
    MMAL_COMPONENT_T *camera_info;
    MMAL_STATUS_T status;
@@ -378,7 +378,7 @@ void MMALCamera::get_sensor_size()
    mmal_component_destroy(camera_info);
 }
 
-#if 1
+#if 0
 class FileWriter : public MMALListener
 {
 public:
@@ -421,7 +421,7 @@ int main(int argc, char **argv)
     FileWriter fout("/dev/shm/capture");
 
     cam.add_listener(&fout);
-    cam.set_shutter_speed_us(0);   // FIXME: Seconds does not work completely ok.
+    cam.set_shutter_speed_us(300000);   // FIXME: Seconds does not work completely ok.
     cam.set_iso(0);
     cam.set_gain(1);
     cam.capture();

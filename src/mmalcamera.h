@@ -37,7 +37,7 @@ private:
     void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
     void create_camera_component();
     void set_capture_port_format();
-    void get_sensor_size();
+    void get_sensor_info();
     void set_camera_parameters();
     static void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 

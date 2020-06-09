@@ -1,3 +1,4 @@
-- ISO-settings
+- Decoding I422 -> Bayer
+- After disconnect and reconnect, camera can not be enabled again.
 - Binning
 - CFA property
