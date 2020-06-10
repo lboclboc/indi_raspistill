@@ -9,7 +9,9 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include "mmalexception.h"
 #include "mmaldriver.h"
+#include "cameracontrol.h"
 
 MMALDriver::MMALDriver() : INDI::CCD()
 {
@@ -78,24 +80,24 @@ bool MMALDriver::Connect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device connected successfully!");
 
-    camera.reset(new MMALCamera());
+    camera_control.reset(new CameraControl());
 
-    camera->add_listener(this);
+    camera_control->add_pixel_listener(this);
 
     SetTimer(POLLMS);
 
     float pixel_size_x = 0, pixel_size_y = 0;
 
-    if (!strcmp(camera->get_name(), "imx477")) {
+    if (!strcmp(camera_control->get_camera() ->get_name(), "imx477")) {
         pixel_size_x = pixel_size_y = 1.55F;
     }
     else {
-        LOGF_WARN("%s: Unknown camera name: %s\n", __FUNCTION__, camera->get_name());
+        LOGF_WARN("%s: Unknown camera name: %s\n", __FUNCTION__, camera_control->get_camera()->get_name());
         return false;
     }
-    SetCCDParams(static_cast<int>(camera->get_width()), static_cast<int>(camera->get_height()), 16, pixel_size_x, pixel_size_y);
+    SetCCDParams(static_cast<int>(camera_control->get_camera()->get_width()), static_cast<int>(camera_control->get_camera()->get_height()), 16, pixel_size_x, pixel_size_y);
     // Should really not be called by the client.
-    UpdateCCDFrame(0, 0, static_cast<int>(camera->get_width()), static_cast<int>(camera->get_height()));
+    UpdateCCDFrame(0, 0, static_cast<int>(camera_control->get_camera()->get_width()), static_cast<int>(camera_control->get_camera()->get_height()));
 
     return true;
 }
@@ -107,7 +109,7 @@ bool MMALDriver::Disconnect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device disconnected successfully!");
 
-    camera.reset(nullptr);
+    camera_control = nullptr;
 
     return true;
 }
@@ -368,11 +370,11 @@ void MMALDriver::grabImage()
 
     image_buffer_pointer = PrimaryCCD.getFrameBuffer();
     try {
-        camera->set_iso(isoSpeed);
-        camera->set_gain(gain);
-        camera->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
-        camera->capture();
-    } catch (MMALCamera::MMALException e) {
+        camera_control->get_camera()->set_iso(isoSpeed);
+        camera_control->get_camera()->set_gain(gain);
+        camera_control->get_camera()->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
+        camera_control->capture();
+    } catch (MMALException e) {
         fprintf(stderr, "Caugh camera exception: %s\n", e.what());
         return;
     }
@@ -384,13 +386,16 @@ void MMALDriver::grabImage()
 }
 
 /**
- * @brief MMALDriver::buffer_received Gets called when a new buffer is received from the camera.
+ * @brief MMALDriver::pixels_received Gets called when a new buffer of pixels is received from the camera.
  * This method convers the pixels if needed and stores the recived pixel into the primary
  * frame buffer.
  * Assumes that it will be called with complete rows.
- * @param buffer
+ * @param buffer Pointer to raw pixel values.
+ * @param length Length of buffer
+ * @param pitch Length of rows in pixel buffer.
+ *
  */
-void MMALDriver::buffer_received(uint8_t *buffer, size_t length, uint32_t pitch)
+void MMALDriver::pixels_received(uint8_t *buffer, size_t length, uint32_t pitch)
 {
     std::unique_lock<std::mutex> guard(ccdBufferLock);
 

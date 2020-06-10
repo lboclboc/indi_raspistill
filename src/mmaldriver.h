@@ -2,13 +2,13 @@
 #define _INDI_MMAL_H
 
 #include <indiccd.h>
-#include "mmalcamera.h"
-#include "mmallistener.h"
+#include "cameracontrol.h"
+#include "pixellistener.h"
 
 #undef USE_ISO
 #define DEFAULT_ISO 400
 
-class MMALDriver : public INDI::CCD, MMALListener
+class MMALDriver : public INDI::CCD, PixelListener
 {
 public:
 	MMALDriver();
@@ -19,9 +19,8 @@ public:
     virtual void ISGetProperties(const char *dev);
     virtual bool ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n) override;
     virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n) override;
+    virtual void pixels_received(uint8_t *buffer, size_t length, uint32_t pitch) override;
 
-    // MMALListener overrides.
-    virtual void buffer_received(uint8_t *buffer, size_t length, uint32_t pitch) override;
 
 protected:
     // INDI::CCD overrides.
@@ -61,7 +60,7 @@ private:
   INumber mGainN[1];
   INumberVectorProperty mGainNP;
 
-  std::unique_ptr<MMALCamera> camera;
+  std::unique_ptr<CameraControl> camera_control;
 };
 
 extern std::unique_ptr<MMALDriver> mmalDevice;

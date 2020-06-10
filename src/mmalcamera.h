@@ -1,23 +1,19 @@
 #ifndef _MMAL_CAMERA_H
 #define _MMAL_CAMERA_H
 
-
 class MMALCamera;
+class MMALEncoder;
+
 #include <vector>
 #include <stdexcept>
 #include <mmal.h>
+
+#include "mmalcomponent.h"
 #include "mmallistener.h"
 
-class MMALCamera
+class MMALCamera : public MMALComponent
 {
 public:
-    class MMALException : public std::runtime_error
-    {
-    public:
-        MMALException(const char *text);
-        static void throw_if(bool status, const char *text);
-    };
-
     MMALCamera(int cameraNum = 0);
     virtual ~MMALCamera();
     static const int MMAL_CAMERA_PREVIEW_PORT {0};
@@ -31,19 +27,14 @@ public:
     uint32_t get_width() { return width; }
     uint32_t get_height() { return height; }
     const char *get_name() { return cameraName; }
-    void add_listener(MMALListener *l) { listeners.push_back(l); }
 
 private:
-    void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
     void create_camera_component();
+    void create_encoder();
     void set_capture_port_format();
     void get_sensor_info();
     void set_camera_parameters();
-    static void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 
-    MMAL_POOL_T *pool {};
-    VCOS_SEMAPHORE_T complete_semaphore {};
-    MMAL_COMPONENT_T *camera  {};
     int32_t cameraNum {};
     char cameraName[MMAL_PARAMETER_CAMERA_INFO_MAX_STR_LEN] {};
     uint32_t shutter_speed {100000};
@@ -51,10 +42,7 @@ private:
     double gain {1};
     uint32_t width {};
     uint32_t height {};
-    std::vector<MMALListener *>listeners {};
     MMAL_RATIONAL_T fps_low {}, fps_high {};
-
-    friend void c_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 };
 
 #endif // _MMAL_CAMERA_H

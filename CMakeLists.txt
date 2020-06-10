@@ -19,7 +19,10 @@ set(indi_raspistill_SRCS
    ${CMAKE_SOURCE_DIR}/src/mmalcamera.cpp
    ${CMAKE_SOURCE_DIR}/src/indi_mmal.cpp
    ${CMAKE_SOURCE_DIR}/src/mmaldriver.cpp
-#   ${CMAKE_SOURCE_DIR}/src/main.c
+   ${CMAKE_SOURCE_DIR}/src/mmalencoder.cpp
+   ${CMAKE_SOURCE_DIR}/src/mmalexception.cpp
+   ${CMAKE_SOURCE_DIR}/src/mmalcomponent.cpp
+   ${CMAKE_SOURCE_DIR}/src/cameracontrol.cpp
 )
 
 add_executable(indi_raspistill ${indi_raspistill_SRCS})

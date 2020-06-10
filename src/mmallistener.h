@@ -1,12 +1,13 @@
 #ifndef MMALLISTENER_H
 #define MMALLISTENER_H
 
-#include <stddef.h>
+#include <mmal_port.h>
+#include <mmal_buffer.h>
 
 class MMALListener
 {
 public:
-    virtual void buffer_received(uint8_t *buffer, size_t len, uint32_t pitch) = 0;
+    virtual void buffer_received(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) = 0;
 };
 
 #endif // MMALLISTENER_H
