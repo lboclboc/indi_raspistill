@@ -92,8 +92,12 @@ int MMALCamera::capture()
     int exit_code = 0;
     MMAL_STATUS_T status = MMAL_SUCCESS;
 
+    status = mmal_port_parameter_set_boolean(component->output[MMAL_CAMERA_CAPTURE_PORT], MMAL_PARAMETER_ENABLE_RAW_CAPTURE, 1);
+    MMALException::throw_if(status, "Failed to set raw capture");
+
     // Gain settings
-    MMALException::throw_if(mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_ANALOG_GAIN, MMAL_RATIONAL_T {static_cast<int32_t>(gain * 65536), 65536}), "Failed to set analog gain");
+    status = mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_ANALOG_GAIN, MMAL_RATIONAL_T {static_cast<int32_t>(gain * 65536), 65536});
+    MMALException::throw_if(status, "Failed to set analog gain");
 
     // Exposure time
     if(shutter_speed > 6000000)
@@ -119,8 +123,6 @@ int MMALCamera::capture()
     // Go
     status = mmal_port_parameter_set_boolean(component->output[MMAL_CAMERA_CAPTURE_PORT], MMAL_PARAMETER_CAPTURE, 1);
     MMALException::throw_if(status, "Failed to start capture");
-
-
 
     return exit_code;
 }
@@ -161,8 +163,6 @@ void MMALCamera::set_camera_parameters()
 void MMALCamera::set_capture_port_format()
 {
     MMAL_STATUS_T status {MMAL_EINVAL};
-
-    MMALException::throw_if(mmal_port_parameter_set_boolean(component->output[MMAL_CAMERA_CAPTURE_PORT], MMAL_PARAMETER_ENABLE_RAW_CAPTURE, 1), "Failed to set raw capture");
 
 
 #if 0 // FIXME

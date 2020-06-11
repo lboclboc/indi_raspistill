@@ -9,17 +9,19 @@ include_directories(/opt/vc/include/interface/vmcs_host/linux)
 
 link_directories(/opt/vc/lib)
 
-foreach(lib mmal_core bcm_host mmal_util mmal_vc_client brcmGLESv2 brcmEGL vcsm vcos)
+set (MMAL_LIBS mmal_core mmal_util mmal_vc_client)
+set (EGL_LIBS brcmGLESv2 brcmEGL)
+
+# Removed vcsm
+foreach(lib ${MMAL_LIBS} ${EGL_LIBS} vcos bcm_host m dl)
     find_library(${lib}_LIBRARY
                  NAMES ${lib}
-                 HINTS /opt/vc/lib
+                 HINTS ${MMAL_DIR}/lib /opt/vc/lib
     )
     if (DEFINED ${lib}_LIBRARY)
         message(STATUS "Adding ${${lib}_LIBRARY}")
         set(MMAL_LIBRARIES ${MMAL_LIBRARIES} ${${lib}_LIBRARY})
+    else()
+        message(FATAL_ERROR "Failed to find ${${lib}_LIBRARY} library")
     endif()
 endforeach(lib)
-
-if(NOT DEFINED MMAL_LIBRARIES)
-    message(FATAL_ERROR "Failed to find libmmal_core library")
-endif()

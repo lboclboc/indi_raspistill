@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <mmal_types.h>
 #include <mmal_default_components.h>
+#include <mmal_pool.h>
 #include <mmal_component.h>
+#include <mmal_connection.h>
 
 #include "mmalcomponent.h"
 #include "mmalexception.h"
@@ -71,9 +73,22 @@ void MMALComponent::return_buffer(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffe
     throw MMALException("MMALComponent::return_buffer: No one there to recyle buffers, please override this method.");
 }
 
-void MMALComponent::connect(MMALComponent *src, int src_port, MMALComponent *dst, int dst_port)
+void MMALComponent::connect(int src_port, MMALComponent *dst, int dst_port)
 {
-    MMAL_STATUS_T status = mmal_port_connect(src->component->output[src_port], dst->component->input[dst_port]);
-    MMALException::throw_if(status, "Failed to connect components");
+   MMAL_STATUS_T status;
+
+   MMALException::throw_if(connection, "Only one connection supported");
+
+   status =  mmal_connection_create(&connection, component->output[src_port], dst->component->input[dst_port], MMAL_CONNECTION_FLAG_TUNNELLING | MMAL_CONNECTION_FLAG_ALLOCATION_ON_INPUT);
+   MMALException::throw_if(status, "Failed to connect components");
+   if (status == MMAL_SUCCESS)
+   {
+      status =  mmal_connection_enable(connection);
+      if (status != MMAL_SUCCESS) {
+         mmal_connection_destroy(connection);
+         connection = nullptr;
+         throw MMALException("Failed to enable connection");
+      }
+   }
 }
 

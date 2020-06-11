@@ -42,7 +42,15 @@ Log messages:
     vcdbg log msg
 
 Set logging level for category:
+List categories
     vcdbg log level <category> e w i t
+
+or
+    vcgencmd set_logging level=0x40
+
+Enable mmal_logging:
+    vcdbg syms |& grep mmal.*log
+    sudo vcdbg trash 0xcf5e12c0 4   (Address of mmal_dbg_log)
 
 Available commands to vcgencmd:
     vcgencmd commands
@@ -50,7 +58,9 @@ Available commands to vcgencmd:
 Displays the error log status of the various VideoCore software areas:
     vcgencmd vcos log status
 
-More info: https://github.com/nezticle/RaspberryPi-BuildRoot/wiki/VideoCore-Tools
+More info:
+- https://github.com/nezticle/RaspberryPi-BuildRoot/wiki/VideoCore-Tools
+- https://elinux.org/RPI_vcgencmd_usage
 
 Other info
 ----------

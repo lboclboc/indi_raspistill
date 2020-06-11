@@ -48,6 +48,16 @@ MMALEncoder::MMALEncoder() : MMALComponent(MMAL_COMPONENT_DEFAULT_IMAGE_ENCODER)
     if (pool== nullptr) {
         MMALException::throw_if(status, "To create pool");
     }
+}
+
+/**
+ * @brief MMALEncoder::activate Enables the output and activates the encoder.
+ */
+void MMALEncoder::activate()
+{
+    MMAL_STATUS_T status;
+
+    enable_port_with_callback(component->output[0]);
 
     unsigned int num = mmal_queue_length(pool->queue);
     for (unsigned int q = 0; q < num; q++)
@@ -57,18 +67,16 @@ MMALEncoder::MMALEncoder() : MMALComponent(MMAL_COMPONENT_DEFAULT_IMAGE_ENCODER)
         status = mmal_port_send_buffer(component->output[0], buffer);
         MMALException::throw_if(status, "Failed to send buffer to port");
     }
-
-    enable_port_with_callback(component->output[0]);
 }
 
 MMALEncoder::~MMALEncoder()
 {
+    if (component->output[0]->is_enabled) {
+        mmal_port_disable(component->output[0]);
+    }
     if (pool) {
         mmal_port_pool_destroy(component->output[0], pool);
         pool = nullptr;
-    }
-    if (component->output[0]->is_enabled) {
-        mmal_port_disable(component->output[0]);
     }
 }
 

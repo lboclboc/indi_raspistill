@@ -8,14 +8,13 @@
 
 CameraControl::CameraControl()
 {
-    // Register our application with the logging system
-    vcos_log_register("indi_mmal", VCOS_LOG_CATEGORY);
-
     camera.reset(new MMALCamera(0));
     encoder.reset(new MMALEncoder());
-    encoder->add_listener(this);
+    encoder->add_port_listener(this);
 
-    MMALComponent::connect(camera.get(), 2, encoder.get(), 0); // Connected the capture port to the encoder.
+    camera->connect(2, encoder.get(), 0); // Connected the capture port to the encoder.
+
+    encoder->activate();
 }
 
 CameraControl::~CameraControl()
@@ -63,9 +62,10 @@ void CameraControl::capture()
     vcos_status = vcos_semaphore_create(&complete_semaphore, "RaspiStill-sem", 0);
     MMALException::throw_if(vcos_status, "Failed to create semaphore");
 
+    camera->capture();
+
     // Wait for capture to complete
     vcos_semaphore_wait(&complete_semaphore);
-
     vcos_semaphore_delete(&complete_semaphore);
 }
 
@@ -108,6 +108,10 @@ void FileWriter::pixels_received(uint8_t *buffer, size_t len, uint32_t pitch)
 int main(int argc, char **argv)
 {
     bcm_host_init();
+
+    // Register our application with the logging system
+    vcos_log_register("indi_mmal", VCOS_LOG_CATEGORY);
+
     (void)argc;
     (void)argv;
 
