@@ -48,8 +48,18 @@ static struct jpeg_decompress_struct info = {
   .src = &source
 };
 
+int xxmain(int argc, char **argv)
+{
+    struct jpeg_error_mgr stderr;
+    jpeg_std_error(&stderr);
+
+    info.err = &stderr;
+    printf("Starting\n");
+    jpeg_CreateDecompress(&info, JPEG_LIB_VERSION, sizeof info);
+    jpeg_read_header(&info, TRUE);
+}
+
 int main(int argc, char **argv)
 {
-    printf("Starting\n");        
-    jpeg_read_header(&info, TRUE);
+    FILE *fp = fopen("raw.jpg", "r");
 }
