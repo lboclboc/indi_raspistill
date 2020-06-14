@@ -1,38 +1,51 @@
 #include <stdio.h>
-#include <arpa/inet.h>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
 
+/**
+ * @brief The RawStreamReceiver class
+ * Repsonsible for receiving a raw image from the MMAL subsystem. In this mode
+ * the image consist of a normal JPEG-image, followed by a 32K broadcom header and then
+ * the true raw data. This class accepts one byte at a time and spools past the JPEG header,
+ * picks up the row pitch and then spools past the @BRCMo data.
+ */
 class RawStreamReceiver
 {
 public:
-    class Exception : std::runtime_error
+    class Exception : public std::runtime_error
     {
-    public: Exception(char *text) : std::runtime_error(text) {}
+    public: Exception(const char *text) : std::runtime_error(text) {}
     };
 
-    RawStreamReceiver();
-
-    void accept_byte(uint8_t byte);
-
-private:
     enum class State {
         WANT_FF,
         WANT_TYPE,
         WANT_S1,
         WANT_S2,
-        WANT_SKIP,
+        SKIP_BYTES,
         ENTROPY_WANT_SKIP,
         ENTROPY_DATA_WANT_S1,
-        ENTROPY_DATA_WANT_S1,
+        ENTROPY_DATA_WANT_S2,
+        ENTROPY_SKIP_BYTES,
         WANT_ENTROPY_DATA,
+        ENTROPY_GOT_FF,
         END_OF_JPEG,
         INVALID} state {State::WANT_FF};
-    int pos {0};
+
+    RawStreamReceiver() {}
+
+    void accept_byte(uint8_t byte);
+    State getState() { return state; }
+    int getPosition() { return pos; }
+
+private:
+    int pos {-1};
     int s1 {0}; // Length field, first byte MSB.
     int s2 {0}; // Length field, second byte LSB.
     int skip_bytes {0}; //Counter for skipping bytes.
+    bool entropy_data_follows {false};
+    int current_type {}; // For debugging only.
 };
 
 /**
@@ -42,10 +55,7 @@ private:
  */
 void RawStreamReceiver::accept_byte(uint8_t byte)
 {
-    uint8_t ff = 0;
-    uint8_t type = 0;
-    uint16_t len;
-    static int saved_type = -1;
+    pos++;
 
     switch(state)
     {
@@ -61,14 +71,65 @@ void RawStreamReceiver::accept_byte(uint8_t byte)
         state = State::WANT_TYPE;
         return;
 
-    case State::WANT_ENTROPY_DATA:
-        if (byte == 0xFF) {
-            state = State:
+    case State::WANT_S1:
+        s1 = byte;
+        state = State::WANT_S2;
+        return;
 
+    case State::WANT_S2:
+        s2 = byte;
+        state = State::SKIP_BYTES;
+        skip_bytes = (s1 << 8) + s2 - 2;  // -2 since we already read S1 S2
+        return;
+
+    case State::SKIP_BYTES:
+        skip_bytes--;
+        if (skip_bytes == 0) {
+            state = State::WANT_FF;
         }
         return;
 
+    case State::ENTROPY_DATA_WANT_S1:
+        s1 = byte;
+        state = State::ENTROPY_DATA_WANT_S2;
+        return;
+
+    case State::ENTROPY_DATA_WANT_S2:
+        s2 = byte;
+        state = State::ENTROPY_SKIP_BYTES;
+        skip_bytes = (s1 << 8) + s2 - 2;  // -2 since we already read S1 S2
+        return;
+
+    case State::ENTROPY_SKIP_BYTES:
+        skip_bytes--;
+        if (skip_bytes == 0) {
+            state = State::WANT_ENTROPY_DATA;
+        }
+        return;
+
+    case State::WANT_ENTROPY_DATA:
+        if (byte == 0xFF) {
+            state = State::ENTROPY_GOT_FF;
+        }
+        return;
+
+    case State::ENTROPY_GOT_FF:
+        if (byte == 0) {
+            // Just an escaped 0
+            state = State::WANT_ENTROPY_DATA;
+            return;
+        }
+        else if (byte == 0xFF) {
+            // Padding
+            state = State::ENTROPY_GOT_FF;
+            return;
+        }
+        // If not FF00 and FFFF then we got a real segment type now.
+        // FALL THROUGH
+        state = State::WANT_TYPE;
+
     case State::WANT_TYPE:
+        current_type = byte;
         switch(byte)
         {
         case 0xd8: // SOI (Start of image)
@@ -80,15 +141,19 @@ void RawStreamReceiver::accept_byte(uint8_t byte)
             return;
 
         case 0xda: // SOS (Start of scan)
-        case 0xdb: // Quantization Table
         case 0xc0: // Baseline DCT
         case 0xc4: // Huffman Table
             state = State::ENTROPY_DATA_WANT_S1;
             return;
 
+        case 0xdb: // Quantization Table
         case 0xe0: // JFIF APP0
         case 0xe1: // JFIF APP0
-            state = State:WANT_S1;
+            state = State::WANT_S1;
+            return;
+
+        default:
+            throw Exception("Unknown JPEG segment type.");
             return;
         }
 
@@ -97,27 +162,34 @@ void RawStreamReceiver::accept_byte(uint8_t byte)
         state = State::INVALID;
         throw Exception("Internal error, unknown state");
     }
-
-
-    default:
-        std::cout << "Unknown type: " << (unsigned int)type << " at segment starting at " << std::hex << pos << std::endl;
-        return 0;
-    }
-
-    return 1;
 }
 
 int main(int argc, char **argv)
 {
-    std::ifstream in;
-    in.open("raw.jpg");
-    if (!in) {
+    uint8_t byte;
+    std::ifstream fin;
+    fin.open("raw.jpg");
+    if (!fin) {
         std::cerr << "Failed to open file\n";
         exit(1);
     }
+    RawStreamReceiver receiver;
 
-    while(read_marker(in))
+    try
     {
+        while(fin.read(reinterpret_cast<char *>(&byte), 1))
+        {
+            receiver.accept_byte(byte);
+            if (receiver.getState() == RawStreamReceiver::State::END_OF_JPEG) {
+                fprintf(stderr, "End of jpeg at pos %d\n", receiver.getPosition());
+                return 0;
+            }
+        }
+        fprintf(stderr, "Never found end of jpeg. Pos=%d\n", receiver.getPosition());
+    }
+    catch(RawStreamReceiver::Exception e)
+    {
+        fprintf(stderr, "Caught exception %s\n", e.what());
     }
 
     return 0;
