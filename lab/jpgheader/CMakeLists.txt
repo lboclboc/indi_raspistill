@@ -25,6 +25,6 @@ TARGET_LINK_LIBRARIES(jpgheader ${JPEG_LIB})
 
 else()
 
-    ADD_EXECUTABLE(jpegheader jpegheader.cpp)
+    ADD_EXECUTABLE(jpegheader jpegheader.cpp jpegpipeline.cpp broadcompipeline.cpp pipeline.cpp raw12tobayer16pipeline.cpp)
 
 endif()
