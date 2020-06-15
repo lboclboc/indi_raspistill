@@ -33,7 +33,8 @@ private:
     size_t fb_height;
     int x {0};
     int y {0};
-    int raw_x {0};  // Position in the raw-data comming in.
+    int pos {-1};
+    int raw_x {-1};  // Position in the raw-data comming in.
     enum {b1, b2, b3} state = b1; // Which byte in the RAW12 format (see above).
 };
 
