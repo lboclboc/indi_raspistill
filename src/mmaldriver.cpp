@@ -12,10 +12,20 @@
 #include "mmalexception.h"
 #include "mmaldriver.h"
 #include "cameracontrol.h"
+#include "jpegpipeline.h"
+#include "broadcompipeline.h"
+#include "raw12tobayer16pipeline.h"
 
 MMALDriver::MMALDriver() : INDI::CCD()
 {
     setVersion(1, 0);
+
+    receiver.reset(new JpegPipeline());
+    brcm.reset(new BroadcomPipeline());
+    raw12.reset(new Raw12ToBayer16Pipeline(brcm.get(), PrimaryCCD));
+
+    receiver->daisyChain(brcm.get());
+    receiver->daisyChain(raw12.get());
 }
 
 MMALDriver::~MMALDriver()
@@ -216,7 +226,6 @@ bool MMALDriver::UpdateCCDBin(int hor, int ver)
 bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
 {
 	LOGF_DEBUG("UpdateCCDFrame(%d, %d, %d, %d", x, y, w, h);
-fprintf(stderr, "UpdateCCDFrame(%d, %d, %d, %d", x, y, w, h);
 
     // FIXME: handle cropping
     if (x + y != 0) {
@@ -228,7 +237,7 @@ fprintf(stderr, "UpdateCCDFrame(%d, %d, %d, %d", x, y, w, h);
     int yRes = PrimaryCCD.getYRes();
     int bpp = PrimaryCCD.getBPP();
     int nbuf = (xRes * yRes * (bpp / 8));
-    // If I422, we need double that for UV data. FIXME
+
     nbuf *= 2;
 
     LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
@@ -395,21 +404,12 @@ void MMALDriver::grabImage()
  * @param pitch Length of rows in pixel buffer.
  *
  */
-void MMALDriver::pixels_received(uint8_t *buffer, size_t length, uint32_t pitch)
+void MMALDriver::pixels_received(uint8_t *buffer, size_t length)
 {
     std::unique_lock<std::mutex> guard(ccdBufferLock);
 
-    uint8_t *end_of_image = PrimaryCCD.getFrameBuffer() + PrimaryCCD.getFrameBufferSize();
-
-    uint32_t max_x = std::min(static_cast<uint32_t>(PrimaryCCD.getXRes()), pitch);
-
-    for(uint8_t *row = buffer; row < buffer + length - pitch; row += pitch)
-    {
-        for(uint32_t x = 0; x <  max_x && image_buffer_pointer < end_of_image; x++)
-        {
-            *image_buffer_pointer++ = 0;        // LSB
-            *image_buffer_pointer++ = row[x];   // MSB
-        }
+    while(length--) {
+        receiver->acceptByte(*buffer++);
     }
 
     guard.unlock();

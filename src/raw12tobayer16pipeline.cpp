@@ -1,18 +1,20 @@
 #include <iostream>
+#include <indiccdchip.h>
 #include "raw12tobayer16pipeline.h"
 #include "broadcompipeline.h"
+
 
 void Raw12ToBayer16Pipeline::acceptByte(uint8_t byte)
 {
     pos++;
-    if (++raw_x >= bcm_header->omx_data.raw_width) {
+    if (++raw_x >= bcm_pipe->header.omx_data.raw_width) {
         y += 1;
         x = 0;
         raw_x = 0;
     }
 
-    if ( x < fb_width && y < fb_height) {
-        uint16_t *cur_row = framebuffer + y * fb_width;
+    if ( x < ccd.getXRes() && y < ccd.getYRes()) {
+        uint16_t *cur_row = reinterpret_cast<uint16_t *>(ccd.getFrameBuffer()) + y * ccd.getYRes();
         // RAW according to experiment.
         switch(state)
         {

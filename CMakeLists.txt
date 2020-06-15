@@ -25,6 +25,10 @@ set(indi_raspistill_SRCS
    ${CMAKE_SOURCE_DIR}/src/mmalexception.cpp
    ${CMAKE_SOURCE_DIR}/src/mmalcomponent.cpp
    ${CMAKE_SOURCE_DIR}/src/cameracontrol.cpp
+   ${CMAKE_SOURCE_DIR}/src/raw12tobayer16pipeline.cpp
+   ${CMAKE_SOURCE_DIR}/src/pipeline.cpp
+   ${CMAKE_SOURCE_DIR}/src/jpegpipeline.cpp
+   ${CMAKE_SOURCE_DIR}/src/broadcompipeline.cpp
 )
 set (EGL_LIBS brcmGLESv2 brcmEGL)
 

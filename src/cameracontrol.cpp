@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <bcm_host.h>
+#include <stdexcept>
 
 #include <mmal_logging.h>
 #include "cameracontrol.h"
@@ -34,8 +35,12 @@ void CameraControl::buffer_received(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
     {
         int complete = 0;
 
+        assert(buffer->type->video.planes == 1);
+
         if (buffer->length) {
-            // FIXME: Here the pixels shall be sent to pixel listeners.
+            for(auto l : pixel_listeners) {
+                l->pixels_received(buffer->data + buffer->offset, buffer->length);
+            }
         }
 
         // Now flag if we have completed
@@ -70,7 +75,7 @@ void CameraControl::capture()
 }
 
 
-#if 1
+#if 0
 class FileWriter : public PixelListener
 {
 public:
