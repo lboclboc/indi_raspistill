@@ -1,3 +1,4 @@
+- After Disconnect->Reconnect a couple of time: Preview never stops but keeps running.
 - Decoding I422 -> Bayer
 - After disconnect and reconnect, camera can not be enabled again.
 - Binning

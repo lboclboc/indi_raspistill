@@ -29,6 +29,7 @@ set(indi_raspistill_SRCS
    ${CMAKE_SOURCE_DIR}/src/pipeline.cpp
    ${CMAKE_SOURCE_DIR}/src/jpegpipeline.cpp
    ${CMAKE_SOURCE_DIR}/src/broadcompipeline.cpp
+   ${CMAKE_SOURCE_DIR}/src/pipetee.cpp
 )
 set (EGL_LIBS brcmGLESv2 brcmEGL)
 

@@ -8,11 +8,11 @@ Pipeline::Pipeline()
 
 void Pipeline::daisyChain(Pipeline *p)
 {
-    Pipeline *next = this;
-    while(next->nextPipeline != nullptr) {
-        next = nextPipeline;
+    Pipeline *last = this;
+    while(last->nextPipeline != nullptr) {
+        last = last->nextPipeline;
     }
-    next->nextPipeline = p;
+    last->nextPipeline = p;
 }
 
 void Pipeline::forward(uint8_t byte)

@@ -117,6 +117,7 @@ int MMALCamera::capture()
         MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS low range");
     }
 
+    // FIXME: Seconds does not work completely ok.
     status = mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_SHUTTER_SPEED, shutter_speed);
     MMALException::throw_if(status, "Failed to set shutter speed");
 
@@ -130,7 +131,7 @@ int MMALCamera::capture()
 void MMALCamera::set_camera_parameters()
 {
     MMALException::throw_if(mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_SATURATION, MMAL_RATIONAL_T {10, 0}), "Failed to set saturation");
-    MMALException::throw_if(mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_SHUTTER_SPEED, shutter_speed), "Failed to set shutter speed");
+//    MMALException::throw_if(mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_SHUTTER_SPEED, shutter_speed), "Failed to set shutter speed");
     MMALException::throw_if(mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_ISO, iso), "Failed to set ISO");
     MMALException::throw_if(mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_DIGITAL_GAIN, MMAL_RATIONAL_T {1, 1}), "Failed to set digital gain");
     MMALException::throw_if(mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_BRIGHTNESS, MMAL_RATIONAL_T{50, 100}), "Failed to set brightness");
@@ -165,7 +166,7 @@ void MMALCamera::set_capture_port_format()
     MMAL_STATUS_T status {MMAL_EINVAL};
 
 
-#if 0 // FIXME
+#if 0 // FIXME: Must set default framerate when not long exposure.
     else {
         MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},fps_low, fps_high};
         MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS default range");
@@ -174,13 +175,6 @@ void MMALCamera::set_capture_port_format()
 
     // Set our stills format on the stills (for encoder) port
     MMAL_ES_FORMAT_T *format {component->output[MMAL_CAMERA_CAPTURE_PORT]->format};
-// WORKS    format->encoding = MMAL_ENCODING_I420_SLICE; format->encoding_variant = MMAL_ENCODING_I420;
-// BW image:   format->encoding = MMAL_ENCODING_RGB16_SLICE;
-// WORKS: not raw     format->encoding = MMAL_ENCODING_I420_SLICE;
-// WORKLS    format->encoding = MMAL_ENCODING_I422_SLICE; format->encoding_variant = 0;
-// Same as raspiyuv -rgb:    format->encoding = MMAL_ENCODING_RGB24; format->encoding_variant = 0;
-// 16 LE gray format: format->encoding = MMAL_ENCODING_RGB16; format->encoding_variant = 0;
-// Works, but not raw:   format->encoding = MMAL_ENCODING_I422_SLICE; format->encoding_variant = 0;
 
     // Special case for raw format.
     format->encoding = MMAL_ENCODING_OPAQUE; format->encoding_variant = 0;

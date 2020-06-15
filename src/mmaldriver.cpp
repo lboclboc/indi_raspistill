@@ -15,17 +15,11 @@
 #include "jpegpipeline.h"
 #include "broadcompipeline.h"
 #include "raw12tobayer16pipeline.h"
+#include "pipetee.h"
 
 MMALDriver::MMALDriver() : INDI::CCD()
 {
     setVersion(1, 0);
-
-    receiver.reset(new JpegPipeline());
-    brcm.reset(new BroadcomPipeline());
-    raw12.reset(new Raw12ToBayer16Pipeline(brcm.get(), PrimaryCCD));
-
-    receiver->daisyChain(brcm.get());
-    receiver->daisyChain(raw12.get());
 }
 
 MMALDriver::~MMALDriver()
@@ -106,6 +100,7 @@ bool MMALDriver::Connect()
         return false;
     }
     SetCCDParams(static_cast<int>(camera_control->get_camera()->get_width()), static_cast<int>(camera_control->get_camera()->get_height()), 16, pixel_size_x, pixel_size_y);
+
     // Should really not be called by the client.
     UpdateCCDFrame(0, 0, static_cast<int>(camera_control->get_camera()->get_width()), static_cast<int>(camera_control->get_camera()->get_height()));
 
@@ -362,11 +357,19 @@ void MMALDriver::TimerHit()
  **************************************************************************************/
 void MMALDriver::grabImage()
 {
-    // Let's get a pointer to the frame buffer
-    // Perform the actual exposure.
     // FIXME: Should be a separate thread, this thread should just be waiting.
 
     int isoSpeed = 0;
+
+    JpegPipeline jpeg_spooler; // Start of pipeline that recieved raw data from camera.
+    BroadcomPipeline brcm;  // Second in pipe.
+    //    PipeTee raw_writer("/dev/shm/capture.tap"); // Only for debugging by tapping intermediate data.
+    Raw12ToBayer16Pipeline raw12(&brcm, &PrimaryCCD); // Final in pipe, converting RAW12 to Bayer 16 bits.
+
+    receiver = &jpeg_spooler;
+    receiver->daisyChain(&brcm);
+//    receiver->daisyChain(&raw_writer);
+    receiver->daisyChain(&raw12);
 
 #ifdef USE_ISO
     isoSpeed = DEFAULT_ISO;
@@ -383,8 +386,10 @@ void MMALDriver::grabImage()
         camera_control->get_camera()->set_gain(gain);
         camera_control->get_camera()->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
         camera_control->capture();
-    } catch (MMALException e) {
-        fprintf(stderr, "Caugh camera exception: %s\n", e.what());
+    }
+    catch (MMALException e)
+    {
+        LOGF_ERROR("%s(%s): Caugh camera exception: %s\n", __FILE__, __func__, e.what());
         return;
     }
 
@@ -407,6 +412,8 @@ void MMALDriver::grabImage()
 void MMALDriver::pixels_received(uint8_t *buffer, size_t length)
 {
     std::unique_lock<std::mutex> guard(ccdBufferLock);
+
+    assert(receiver);
 
     while(length--) {
         receiver->acceptByte(*buffer++);

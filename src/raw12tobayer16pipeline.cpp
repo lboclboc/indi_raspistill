@@ -1,20 +1,27 @@
 #include <iostream>
+#include <cassert>
 #include <indiccdchip.h>
+
 #include "raw12tobayer16pipeline.h"
 #include "broadcompipeline.h"
 
-
 void Raw12ToBayer16Pipeline::acceptByte(uint8_t byte)
 {
-    pos++;
-    if (++raw_x >= bcm_pipe->header.omx_data.raw_width) {
+    if (raw_x >= bcm_pipe->header.omx_data.raw_width) {
         y += 1;
         x = 0;
         raw_x = 0;
     }
 
-    if ( x < ccd.getXRes() && y < ccd.getYRes()) {
-        uint16_t *cur_row = reinterpret_cast<uint16_t *>(ccd.getFrameBuffer()) + y * ccd.getYRes();
+    assert(bcm_pipe->header.omx_data.raw_width == 6112);
+    assert(ccd->getXRes() == 4056);
+    assert(ccd->getYRes() == 3040);
+
+    if ( x < ccd->getXRes() && y < ccd->getYRes()) {
+        uint16_t *cur_row = reinterpret_cast<uint16_t *>(ccd->getFrameBuffer()) + y * ccd->getXRes();
+
+        assert((cur_row - reinterpret_cast<uint16_t *>(ccd->getFrameBuffer())) % 4056 == 0); // Finds brain-dead calculations.
+
         // RAW according to experiment.
         switch(state)
         {
@@ -37,4 +44,7 @@ void Raw12ToBayer16Pipeline::acceptByte(uint8_t byte)
             break;
         }
     }
+
+    pos++;
+    raw_x++;
 }

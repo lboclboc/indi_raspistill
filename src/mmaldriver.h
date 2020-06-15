@@ -8,9 +8,7 @@
 #undef USE_ISO
 #define DEFAULT_ISO 400
 
-class JpegPipeline;
-class BroadcomPipeline;
-class Raw12ToBayer16Pipeline;
+class Pipeline;
 
 class MMALDriver : public INDI::CCD, PixelListener
 {
@@ -65,9 +63,7 @@ private:
   INumberVectorProperty mGainNP;
 
   std::unique_ptr<CameraControl> camera_control; // Controller object for the camera communication.
-  std::unique_ptr<JpegPipeline> receiver; // Start of pipeline that recieved raw data from camera.
-  std::unique_ptr<BroadcomPipeline> brcm; // Second in pipe.
-  std::unique_ptr<Raw12ToBayer16Pipeline> raw12; // Final in pipe, converting RAW12 to Bayer 16 bits.
+  Pipeline *receiver {0};
 };
 
 extern std::unique_ptr<MMALDriver> mmalDevice;

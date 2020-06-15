@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     FileWriter fout("/dev/shm/capture");
 
     cam.add_pixel_listener(&fout);
-    cam.get_camera()->set_shutter_speed_us(300000);   // FIXME: Seconds does not work completely ok.
+    cam.get_camera()->set_shutter_speed_us(300000);
     cam.get_camera()->set_iso(0);
     cam.get_camera()->set_gain(1);
     cam.capture();
