@@ -2,6 +2,17 @@
 #include <stdexcept>
 #include "jpegpipeline.h"
 
+void JpegPipeline::reset()
+{
+    state = State::WANT_FF;
+    pos = -1;
+    s1 = 0;
+    s2 = 0;
+    skip_bytes = 0;
+    entropy_data_follows = false;
+    current_type = 0;
+}
+
 /**
  * @brief RawStreamReceiver::accept_byte Accepts next byte of input and sets state accordingly.
  * @param byte Next byte to handle.
@@ -101,10 +112,5 @@ void JpegPipeline::acceptByte(uint8_t byte)
             throw Exception("Unknown JPEG segment type.");
             return;
         }
-
-    default:
-        fprintf(stderr, "%s(%s): Unknown internal state.\n", __FILE__, __func__);
-        state = State::INVALID;
-        throw Exception("Internal error, unknown state");
     }
 }

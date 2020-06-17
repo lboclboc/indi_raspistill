@@ -2,6 +2,12 @@
 #include <stdexcept>
 #include "broadcompipeline.h"
 
+void BroadcomPipeline::reset()
+{
+    pos = -1;
+    memset(&header, 0, sizeof header);
+}
+
 void BroadcomPipeline::acceptByte(uint8_t byte)
 {
     pos++;

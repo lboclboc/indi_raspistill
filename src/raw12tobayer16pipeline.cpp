@@ -5,6 +5,15 @@
 #include "raw12tobayer16pipeline.h"
 #include "broadcompipeline.h"
 
+void Raw12ToBayer16Pipeline::reset()
+{
+    x = 0;
+    y = 0;
+    raw_x = 0;
+    pos = 0;
+    state = b1;
+}
+
 void Raw12ToBayer16Pipeline::acceptByte(uint8_t byte)
 {
     if (raw_x >= bcm_pipe->header.omx_data.raw_width) {
@@ -48,3 +57,5 @@ void Raw12ToBayer16Pipeline::acceptByte(uint8_t byte)
     pos++;
     raw_x++;
 }
+
+

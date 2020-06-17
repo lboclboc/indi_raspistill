@@ -32,6 +32,7 @@ public:
     JpegPipeline() {}
 
     virtual void acceptByte(uint8_t byte) override;
+    virtual void reset() override;
 
     State getState() { return state; }
     int getPosition() { return pos; }

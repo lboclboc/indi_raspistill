@@ -1,10 +1,9 @@
 #include <stdio.h>
-
 #include "pipetee.h"
 
-PipeTee::PipeTee(const char *filename)
+PipeTee::PipeTee(const char *filename) : filename(filename)
 {
-    fp = fopen(filename, "w");
+    reset();
 }
 
 PipeTee::~PipeTee()
@@ -21,3 +20,12 @@ void PipeTee::acceptByte(uint8_t byte)
     forward(byte);
 }
 
+void PipeTee::reset()
+{
+    if (fp) {
+        fclose(fp);
+        fp = nullptr;
+    }
+
+    fp = fopen(filename.c_str(), "w");
+}

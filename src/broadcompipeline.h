@@ -29,11 +29,11 @@ class BroadcomPipeline : public Pipeline
 public:
     BroadcomPipeline() {}
     virtual void acceptByte(uint8_t byte) override;
+    virtual void reset();
     BroadcomHeader header;
 
 private:
     int pos {-1};
-    enum {INIT, READING_MAGIC, READING_HEADER, READING_REST, FINISH};
 };
 
 #endif // BROADCOMPIPELINE_H

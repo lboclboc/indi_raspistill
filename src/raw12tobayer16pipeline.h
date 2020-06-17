@@ -22,6 +22,7 @@ public:
     Raw12ToBayer16Pipeline(const BroadcomPipeline *bcm_pipe, INDI::CCDChip *ccd) : Pipeline(), bcm_pipe(bcm_pipe), ccd(ccd) {}
 
     virtual void acceptByte(uint8_t byte) override;
+    virtual void reset() override;
 
 private:
     const BroadcomPipeline *bcm_pipe;

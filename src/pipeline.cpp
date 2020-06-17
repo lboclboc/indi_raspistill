@@ -23,3 +23,12 @@ void Pipeline::forward(uint8_t byte)
 
     nextPipeline->acceptByte(byte);
 }
+
+void Pipeline::reset_pipe()
+{
+    Pipeline *pipe = this;
+    while(pipe != nullptr) {
+        pipe->reset();
+        pipe = pipe->nextPipeline;
+    }
+}

@@ -33,11 +33,11 @@ MMALCamera::MMALCamera(int n) : MMALComponent(MMAL_COMPONENT_DEFAULT_CAMERA), ca
         cam_config.hdr.size = sizeof cam_config;
         cam_config.max_stills_w = width;
         cam_config.max_stills_h = height;
-        cam_config.stills_yuv422 = 1;  // Needs to be one for MMAL_ENCODING_I422_SLICE
+        cam_config.stills_yuv422 = 0;
         cam_config.one_shot_stills = 1;
-        cam_config.max_preview_video_w = 1024;
-        cam_config.max_preview_video_h = 768;
-        cam_config.num_preview_video_frames = 3;
+        cam_config.max_preview_video_w = 1024;  // Must really be set, even though we are not interested in a preview.
+        cam_config.max_preview_video_h = 768;   // -''-
+        cam_config.num_preview_video_frames = 1;
         cam_config.stills_capture_circular_buffer_height = 0;
         cam_config.fast_preview_resume = 0;
         cam_config.use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RESET_STC;
@@ -116,24 +116,28 @@ int MMALCamera::capture()
         status = mmal_port_parameter_set(component->output[MMAL_CAMERA_CAPTURE_PORT], &fps_range.hdr);
         MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS low range");
     }
-#if 1 // FIXME: Must set default framerate when not long exposure.
     else
     {
         MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},fps_low, fps_high};
         MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS default range");
     }
-#endif
-
 
     // FIXME: Seconds does not work completely ok.
     status = mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_SHUTTER_SPEED, shutter_speed);
     MMALException::throw_if(status, "Failed to set shutter speed");
 
-    // Go
+    // Start capturing.
     status = mmal_port_parameter_set_boolean(component->output[MMAL_CAMERA_CAPTURE_PORT], MMAL_PARAMETER_CAPTURE, 1);
     MMALException::throw_if(status, "Failed to start capture");
 
     return exit_code;
+}
+
+void MMALCamera::abort()
+{
+    MMAL_STATUS_T status = MMAL_SUCCESS;
+    status = mmal_port_parameter_set_boolean(component->output[MMAL_CAMERA_CAPTURE_PORT], MMAL_PARAMETER_CAPTURE, 0);
+    MMALException::throw_if(status, "Failed to abort capture");
 }
 
 void MMALCamera::set_camera_parameters()

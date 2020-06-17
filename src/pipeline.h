@@ -7,8 +7,11 @@ class Pipeline
 {
 public:
     Pipeline();
-    virtual void acceptByte(uint8_t byte) = 0;
     void daisyChain(Pipeline *p);
+    void reset_pipe();
+
+    virtual void acceptByte(uint8_t byte) = 0;
+    virtual void reset() = 0;
 
 protected:
     void forward(uint8_t);

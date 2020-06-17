@@ -20,10 +20,11 @@ public:
     static const int MMAL_CAMERA_VIDEO_PORT {1};
     static const int MMAL_CAMERA_CAPTURE_PORT {2};
 
-    int set_shutter_speed_us(long shutter_speed)  { this->shutter_speed = shutter_speed; return 0; }
-    int set_iso(int iso) { this->iso = iso; return 0; }
-    int set_gain(double gain) { this->gain = gain; return 0; }
+    void set_shutter_speed_us(long shutter_speed)  { this->shutter_speed = shutter_speed; }
+    void set_iso(int iso) { this->iso = iso; }
+    void set_gain(double gain) { this->gain = gain; }
     int capture();
+    void abort();
     uint32_t get_width() { return width; }
     uint32_t get_height() { return height; }
     const char *get_name() { return cameraName; }

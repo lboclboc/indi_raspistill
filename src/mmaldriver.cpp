@@ -17,9 +17,13 @@
 #include "raw12tobayer16pipeline.h"
 #include "pipetee.h"
 
-MMALDriver::MMALDriver() : INDI::CCD()
+MMALDriver::MMALDriver() : INDI::CCD(), jpeg_pipe(), brcm_pipe(), raw12_pipe(&brcm_pipe, &PrimaryCCD)
 {
     setVersion(1, 0);
+
+    jpeg_pipe.daisyChain(&brcm_pipe);
+    // receiver->daisyChain(&raw_writer);
+    brcm_pipe.daisyChain(&raw12_pipe);
 }
 
 MMALDriver::~MMALDriver()
@@ -75,6 +79,14 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
     }
 #endif
 
+}
+
+/**
+ * @brief capture_complete Called by the MMAL callback routine (other thread) when whole capture is done.
+ */
+void MMALDriver::capture_complete()
+{
+    exposure_thread_done = true;
 }
 
 /**************************************************************************************
@@ -248,12 +260,13 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
  **************************************************************************************/
 bool MMALDriver::StartExposure(float duration)
 {
-
     if (InExposure)
     {
         LOG_ERROR("Camera is already exposing.");
         return false;
     }
+
+    exposure_thread_done = false;
 
     LOGF_DEBUG("StartEposure(%f)", static_cast<double>(duration));
 
@@ -266,6 +279,37 @@ bool MMALDriver::StartExposure(float duration)
 
     InExposure = true;
 
+    int isoSpeed = 0;
+
+
+#ifdef USE_ISO
+    isoSpeed = DEFAULT_ISO;
+    ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
+    if (onISO) {
+        isoSpeed = atoi(onISO->label);
+    }
+#endif
+    double gain = mGainN[0].value;
+
+
+    ccdBufferLock.lock();
+    jpeg_pipe.reset_pipe();
+
+    image_buffer_pointer = PrimaryCCD.getFrameBuffer();
+    try {
+        camera_control->get_camera()->set_iso(isoSpeed);
+        camera_control->get_camera()->set_gain(gain);
+        camera_control->get_camera()->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
+        camera_control->start_capture();
+    }
+    catch (MMALException e)
+    {
+        LOGF_ERROR("%s(%s): Caugh camera exception: %s\n", __FILE__, __func__, e.what());
+        return false;
+    }
+
+    IDMessage(getDeviceName(), "Download complete.");
+
     // Return true for this will take some time.
     return true;
 }
@@ -277,8 +321,12 @@ bool MMALDriver::StartExposure(float duration)
 bool MMALDriver::AbortExposure()
 {
 	LOGF_DEBUG("AbortEposure()", 0);
+
+    camera_control->stop_capture();
+    ccdBufferLock.unlock();
     InExposure = false;
-    // FIXME: AbortExposure needs to be handled.
+    PrimaryCCD.setExposureLeft(0);
+
     return true;
 }
 
@@ -322,15 +370,12 @@ void MMALDriver::TimerHit()
         if (timeleft < 0)
             timeleft = 0;
 
-        // FIXME: make capturing occur in separate thread.
-        timeleft = 0;
-
-        // Just update time left in client
+         // Just update time left in client
         PrimaryCCD.setExposureLeft(timeleft);
 
         // Less than a 1 second away from exposure completion, use shorter timer. If less than 1m, take the image.
         if (timeleft < 1.0) {
-            if (timeleft < 0.001) {
+            if (exposure_thread_done) {
 				/* We're done exposing */
 				IDMessage(getDeviceName(), "Exposure done, downloading image...");
 
@@ -338,10 +383,11 @@ void MMALDriver::TimerHit()
 				PrimaryCCD.setExposureLeft(0);
 
 				// We're no longer exposing...
-				InExposure = false;
+                ccdBufferLock.unlock();
+                InExposure = false;
 
-				/* grab and save image */
-				grabImage();
+                // Let INDI::CCD know we're done filling the image buffer
+                ExposureComplete(&PrimaryCCD);
             }
             else {
                 nextTimer = static_cast<uint32_t>(timeleft * 1000);
@@ -350,53 +396,6 @@ void MMALDriver::TimerHit()
     }
 
     SetTimer(nextTimer);
-}
-
-/**************************************************************************************
- * Create a random image and return it to client
- **************************************************************************************/
-void MMALDriver::grabImage()
-{
-    // FIXME: Should be a separate thread, this thread should just be waiting.
-
-    int isoSpeed = 0;
-
-    JpegPipeline jpeg_spooler; // Start of pipeline that recieved raw data from camera.
-    BroadcomPipeline brcm;  // Second in pipe.
-    //    PipeTee raw_writer("/dev/shm/capture.tap"); // Only for debugging by tapping intermediate data.
-    Raw12ToBayer16Pipeline raw12(&brcm, &PrimaryCCD); // Final in pipe, converting RAW12 to Bayer 16 bits.
-
-    receiver = &jpeg_spooler;
-    receiver->daisyChain(&brcm);
-//    receiver->daisyChain(&raw_writer);
-    receiver->daisyChain(&raw12);
-
-#ifdef USE_ISO
-    isoSpeed = DEFAULT_ISO;
-    ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
-    if (onISO) {
-        isoSpeed = atoi(onISO->label);
-    }
-#endif
-    double gain = mGainN[0].value;
-
-    image_buffer_pointer = PrimaryCCD.getFrameBuffer();
-    try {
-        camera_control->get_camera()->set_iso(isoSpeed);
-        camera_control->get_camera()->set_gain(gain);
-        camera_control->get_camera()->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
-        camera_control->capture();
-    }
-    catch (MMALException e)
-    {
-        LOGF_ERROR("%s(%s): Caugh camera exception: %s\n", __FILE__, __func__, e.what());
-        return;
-    }
-
-    IDMessage(getDeviceName(), "Download complete.");
-
-    // Let INDI::CCD know we're done filling the image buffer
-    ExposureComplete(&PrimaryCCD);
 }
 
 /**
@@ -411,15 +410,9 @@ void MMALDriver::grabImage()
  */
 void MMALDriver::pixels_received(uint8_t *buffer, size_t length)
 {
-    std::unique_lock<std::mutex> guard(ccdBufferLock);
-
-    assert(receiver);
-
     while(length--) {
-        receiver->acceptByte(*buffer++);
+        jpeg_pipe.acceptByte(*buffer++);
     }
-
-    guard.unlock();
 }
 
 bool MMALDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
