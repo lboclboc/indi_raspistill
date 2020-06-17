@@ -103,7 +103,7 @@ int MMALCamera::capture()
     if(shutter_speed > 6000000)
     {
         MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
-                                                { 5, 1000 }, {166, 1000}
+                                                { 1, 1000 }, {5, 1000}
                                                };
         status = mmal_port_parameter_set(component->output[MMAL_CAMERA_CAPTURE_PORT], &fps_range.hdr);
         MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS very low range");
@@ -111,11 +111,19 @@ int MMALCamera::capture()
     else if(shutter_speed > 1000000)
     {
         MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},
-                                                { 167, 1000 }, {999, 1000}
+                                                { 5, 1000 }, {166, 1000}
                                                };
         status = mmal_port_parameter_set(component->output[MMAL_CAMERA_CAPTURE_PORT], &fps_range.hdr);
         MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS low range");
     }
+#if 1 // FIXME: Must set default framerate when not long exposure.
+    else
+    {
+        MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},fps_low, fps_high};
+        MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS default range");
+    }
+#endif
+
 
     // FIXME: Seconds does not work completely ok.
     status = mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_SHUTTER_SPEED, shutter_speed);
@@ -131,7 +139,6 @@ int MMALCamera::capture()
 void MMALCamera::set_camera_parameters()
 {
     MMALException::throw_if(mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_SATURATION, MMAL_RATIONAL_T {10, 0}), "Failed to set saturation");
-//    MMALException::throw_if(mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_SHUTTER_SPEED, shutter_speed), "Failed to set shutter speed");
     MMALException::throw_if(mmal_port_parameter_set_uint32(component->control, MMAL_PARAMETER_ISO, iso), "Failed to set ISO");
     MMALException::throw_if(mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_DIGITAL_GAIN, MMAL_RATIONAL_T {1, 1}), "Failed to set digital gain");
     MMALException::throw_if(mmal_port_parameter_set_rational(component->control, MMAL_PARAMETER_BRIGHTNESS, MMAL_RATIONAL_T{50, 100}), "Failed to set brightness");
@@ -164,14 +171,6 @@ void MMALCamera::set_camera_parameters()
 void MMALCamera::set_capture_port_format()
 {
     MMAL_STATUS_T status {MMAL_EINVAL};
-
-
-#if 0 // FIXME: Must set default framerate when not long exposure.
-    else {
-        MMAL_PARAMETER_FPS_RANGE_T fps_range = {{MMAL_PARAMETER_FPS_RANGE, sizeof(fps_range)},fps_low, fps_high};
-        MMALException::throw_if(status != MMAL_SUCCESS, "Failed to set FPS default range");
-    }
-#endif
 
     // Set our stills format on the stills (for encoder) port
     MMAL_ES_FORMAT_T *format {component->output[MMAL_CAMERA_CAPTURE_PORT]->format};

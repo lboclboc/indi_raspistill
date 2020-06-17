@@ -26,19 +26,19 @@ void Raw12ToBayer16Pipeline::acceptByte(uint8_t byte)
         switch(state)
         {
         case b1:
-            cur_row[x] = (byte & 0x0F) >> 0;
-            cur_row[x+1] = (byte & 0xF0) >> 4;
+            cur_row[x] = (byte & 0x0F) << 4;
+            cur_row[x+1] = (byte & 0xF0) << 0;
             state = b2;
             break;
 
         case b2:
-            cur_row[x] |= byte << 4;
+            cur_row[x] |= byte << 8;
             x++;
             state = b3;
             break;
 
         case b3:
-            cur_row[x] |= byte << 4;
+            cur_row[x] |= byte << 8;
             x++;
             state = b1;
             break;
