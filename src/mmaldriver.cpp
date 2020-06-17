@@ -1,21 +1,29 @@
 /**
  * INDI driver for Raspberry Pi 12Mp High Quality camera.
  */
+#include <algorithm>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <assert.h>
 
+#include "mmalexception.h"
 #include "mmaldriver.h"
+#include "cameracontrol.h"
+#include "jpegpipeline.h"
+#include "broadcompipeline.h"
+#include "raw12tobayer16pipeline.h"
+#include "pipetee.h"
 
-extern "C" {
-    extern int raspi_exposure(double exposure, int iso_speed, float gain);
-}
-
-MMALDriver::MMALDriver() : INDI::CCD()
+MMALDriver::MMALDriver() : INDI::CCD(), jpeg_pipe(), brcm_pipe(), raw12_pipe(&brcm_pipe, &PrimaryCCD)
 {
     setVersion(1, 0);
+
+    jpeg_pipe.daisyChain(&brcm_pipe);
+    // receiver->daisyChain(&raw_writer);
+    brcm_pipe.daisyChain(&raw12_pipe);
 }
 
 MMALDriver::~MMALDriver()
@@ -56,7 +64,8 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
 {
     INDI::CCD::addFITSKeywords(fptr, targetChip);
 
-#ifdef USE_ISOx // FIXME
+#ifdef USE_ISO // FIXME
+    int status = 0;
     if (mIsoSP.nsp > 0)
     {
         ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
@@ -72,6 +81,14 @@ void MMALDriver::addFITSKeywords(fitsfile * fptr, INDI::CCDChip * targetChip)
 
 }
 
+/**
+ * @brief capture_complete Called by the MMAL callback routine (other thread) when whole capture is done.
+ */
+void MMALDriver::capture_complete()
+{
+    exposure_thread_done = true;
+}
+
 /**************************************************************************************
  * Client is asking us to establish connection to the device
  **************************************************************************************/
@@ -79,7 +96,26 @@ bool MMALDriver::Connect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device connected successfully!");
 
+    camera_control.reset(new CameraControl());
+
+    camera_control->add_pixel_listener(this);
+
     SetTimer(POLLMS);
+
+    float pixel_size_x = 0, pixel_size_y = 0;
+
+    if (!strcmp(camera_control->get_camera() ->get_name(), "imx477")) {
+        pixel_size_x = pixel_size_y = 1.55F;
+    }
+    else {
+        LOGF_WARN("%s: Unknown camera name: %s\n", __FUNCTION__, camera_control->get_camera()->get_name());
+        return false;
+    }
+    SetCCDParams(static_cast<int>(camera_control->get_camera()->get_width()), static_cast<int>(camera_control->get_camera()->get_height()), 16, pixel_size_x, pixel_size_y);
+
+    // Should really not be called by the client.
+    UpdateCCDFrame(0, 0, static_cast<int>(camera_control->get_camera()->get_width()), static_cast<int>(camera_control->get_camera()->get_height()));
+
     return true;
 }
 
@@ -89,6 +125,9 @@ bool MMALDriver::Connect()
 bool MMALDriver::Disconnect()
 {
     DEBUG(INDI::Logger::DBG_SESSION, "MMAL device disconnected successfully!");
+
+    camera_control = nullptr;
+
     return true;
 }
 
@@ -124,9 +163,7 @@ bool MMALDriver::initProperties()
 
     // CCD Gain
     IUFillNumber(&mGainN[0], "GAIN", "Gain", "%.f", 1, 16.0, 1, 1);
-    IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);
-
-// FIXME: Use defined constant.    IUSaveText(&BayerT[2], "BGGR");
+    IUFillNumberVector(&mGainNP, mGainN, 1, getDeviceName(), "CCD_GAIN", "Gain", IMAGE_SETTINGS_TAB, IP_RW, 60, IPS_IDLE);
 
     addDebugControl();
 
@@ -145,15 +182,7 @@ bool MMALDriver::initProperties()
 
     setDefaultPollingPeriod(500);
 
-
-
     PrimaryCCD.setMinMaxStep("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", 0.001, 1000, .0001, false);
-
-//    PrimaryCCD.setCompressed(false);
-
-    // FIXME: Ask camera about sizes instead of hardcode.
-    SetCCDParams(4056, 3040, 16, 1.55F, 1.55F);
-    UpdateCCDFrame(0, 0, 4056, 3040);
 
     return true;
 }
@@ -162,6 +191,8 @@ bool MMALDriver::updateProperties()
 {
 	// We must ALWAYS call the parent class updateProperties() first
     INDI::CCD::updateProperties();
+
+    IUSaveText(&BayerT[2], "BGGR");
 
     LOGF_DEBUG("%s: updateProperties()", __FUNCTION__);
 
@@ -214,6 +245,8 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
     int bpp = PrimaryCCD.getBPP();
     int nbuf = (xRes * yRes * (bpp / 8));
 
+    nbuf *= 2;
+
     LOGF_DEBUG("%s: frame buffer size set to %d", __FUNCTION__, nbuf);
 
     PrimaryCCD.setFrameBufferSize(nbuf);
@@ -227,12 +260,13 @@ bool MMALDriver::UpdateCCDFrame(int x, int y, int w, int h)
  **************************************************************************************/
 bool MMALDriver::StartExposure(float duration)
 {
-
     if (InExposure)
     {
         LOG_ERROR("Camera is already exposing.");
         return false;
     }
+
+    exposure_thread_done = false;
 
     LOGF_DEBUG("StartEposure(%f)", static_cast<double>(duration));
 
@@ -245,6 +279,37 @@ bool MMALDriver::StartExposure(float duration)
 
     InExposure = true;
 
+    int isoSpeed = 0;
+
+
+#ifdef USE_ISO
+    isoSpeed = DEFAULT_ISO;
+    ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
+    if (onISO) {
+        isoSpeed = atoi(onISO->label);
+    }
+#endif
+    double gain = mGainN[0].value;
+
+
+    ccdBufferLock.lock();
+    jpeg_pipe.reset_pipe();
+
+    image_buffer_pointer = PrimaryCCD.getFrameBuffer();
+    try {
+        camera_control->get_camera()->set_iso(isoSpeed);
+        camera_control->get_camera()->set_gain(gain);
+        camera_control->get_camera()->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
+        camera_control->start_capture();
+    }
+    catch (MMALException e)
+    {
+        LOGF_ERROR("%s(%s): Caugh camera exception: %s\n", __FILE__, __func__, e.what());
+        return false;
+    }
+
+    IDMessage(getDeviceName(), "Download complete.");
+
     // Return true for this will take some time.
     return true;
 }
@@ -256,8 +321,12 @@ bool MMALDriver::StartExposure(float duration)
 bool MMALDriver::AbortExposure()
 {
 	LOGF_DEBUG("AbortEposure()", 0);
+
+    camera_control->stop_capture();
+    ccdBufferLock.unlock();
     InExposure = false;
-    // FIXME: AbortExposure needs to be handled.
+    PrimaryCCD.setExposureLeft(0);
+
     return true;
 }
 
@@ -301,15 +370,12 @@ void MMALDriver::TimerHit()
         if (timeleft < 0)
             timeleft = 0;
 
-        // FIXME: make capturing occur in separate thread.
-        timeleft = 0;
-
-        // Just update time left in client
+         // Just update time left in client
         PrimaryCCD.setExposureLeft(timeleft);
 
         // Less than a 1 second away from exposure completion, use shorter timer. If less than 1m, take the image.
         if (timeleft < 1.0) {
-            if (timeleft < 0.001) {
+            if (exposure_thread_done) {
 				/* We're done exposing */
 				IDMessage(getDeviceName(), "Exposure done, downloading image...");
 
@@ -317,10 +383,11 @@ void MMALDriver::TimerHit()
 				PrimaryCCD.setExposureLeft(0);
 
 				// We're no longer exposing...
-				InExposure = false;
+                ccdBufferLock.unlock();
+                InExposure = false;
 
-				/* grab and save image */
-				grabImage();
+                // Let INDI::CCD know we're done filling the image buffer
+                ExposureComplete(&PrimaryCCD);
             }
             else {
                 nextTimer = static_cast<uint32_t>(timeleft * 1000);
@@ -331,97 +398,21 @@ void MMALDriver::TimerHit()
     SetTimer(nextTimer);
 }
 
-/**************************************************************************************
- * Create a random image and return it to client
- **************************************************************************************/
-void MMALDriver::grabImage()
+/**
+ * @brief MMALDriver::pixels_received Gets called when a new buffer of pixels is received from the camera.
+ * This method convers the pixels if needed and stores the recived pixel into the primary
+ * frame buffer.
+ * Assumes that it will be called with complete rows.
+ * @param buffer Pointer to raw pixel values.
+ * @param length Length of buffer
+ * @param pitch Length of rows in pixel buffer.
+ *
+ */
+void MMALDriver::pixels_received(uint8_t *buffer, size_t length)
 {
-    // Let's get a pointer to the frame buffer
-    uint8_t *image = PrimaryCCD.getFrameBuffer();
-    const char filename[] = "/dev/shm/indi_raspistill_capture.jpg";
-
-    // Perform the actual exposure.
-    // FIXME: Should be a separate thread, this thread should just be waiting.
-
-    int isoSpeed = 0;
-#ifdef USE_ISO
-    isoSpeed = DEFAULT_ISO;
-    ISwitch * onISO = IUFindOnSwitch(&mIsoSP);
-    if (onISO) {
-        isoSpeed = atoi(onISO->label);
+    while(length--) {
+        jpeg_pipe.acceptByte(*buffer++);
     }
-#endif
-    double gain = 1;
-    gain = mGainN[0].value;
-    raspi_exposure(ExposureRequest, isoSpeed, static_cast<float>(gain));
-    fprintf(stderr,"Image exposed to %s.\n", filename);
-
-    FILE *fp = fopen(filename, "rb");
-    if (!fp)  {
-        LOGF_ERROR("%s: Failed to open %s: %s", __FUNCTION__, filename, strerror(errno));
-        exit(1);
-    }
-
-    struct stat statbuf;
-    if (stat(filename, &statbuf) != 0) {
-        LOGF_ERROR("%s: Failed to stat %s file: %s", __FUNCTION__, filename, strerror(errno));
-        exit(1);
-    }
-
-    // FIXME: remove all hardcoding for IMAX477 camera. Should at least try to parse the BCRM header.
-    const int raw_file_size = 18711040;
-    const int brcm_header_size = 32768;
-    int bytes_to_fill = PrimaryCCD.getFrameBufferSize();
-
-    assert_framebuffer(&PrimaryCCD);
-
-    if (fseek(fp, statbuf.st_size - raw_file_size, SEEK_SET) != 0)  {
-        LOGF_ERROR("%s: Wrong size of %s: %s", __FUNCTION__, filename, strerror(errno));
-        exit(1);
-    }
-
-    {
-        char brcm_header[brcm_header_size];
-        fread(brcm_header, brcm_header_size, 1, fp);
-        if (strcmp(brcm_header, "BRCMo")) {
-            LOGF_ERROR("%s: Missing BRCMo header, found %.10s as pos %ld", __FUNCTION__, brcm_header, ftell(fp));
-            exit(1);
-        }
-    }
-    std::unique_lock<std::mutex> guard(ccdBufferLock);
-    {
-        const int raw_row_size = 6112;
-        const int trailer = 28;
-        uint8_t row[raw_row_size];
-        int i = 0;
-        while(i < bytes_to_fill)
-        {
-            fread(row, raw_row_size, 1, fp);
-            if (ferror(fp)) {
-                    LOGF_ERROR("%s: Failed to read from file: %s, retrying..", __FUNCTION__, strerror(errno));
-                    sleep(1);
-            }
-
-            for(int p = 0; p < raw_row_size - trailer; p += 3)
-            {
-                uint16_t v1 = static_cast<uint16_t>(row[p] + ((row[p+2]&0xF)<<8));
-                uint16_t v2 = static_cast<uint16_t>(row[p+1] + ((row[p+2]&0xF0)<<4));
-                image[i++] = (v1 >> 8) & 0xFF;
-                image[i++] = v1 & 0xFF;
-                image[i++] = (v2 >> 8) & 0xFF;
-                image[i++] = v2 & 0xFF;
-            }
-        }
-    }
-    fclose(fp);
-    unlink(filename);
-
-    guard.unlock();
-
-    IDMessage(getDeviceName(), "Download complete.");
-
-    // Let INDI::CCD know we're done filling the image buffer
-    ExposureComplete(&PrimaryCCD);
 }
 
 bool MMALDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
@@ -487,3 +478,4 @@ bool MMALDriver::ISNewText(const char *dev, const char *name, char *texts[], cha
 
     return INDI::CCD::ISNewText(dev, name, texts, names, n);
 }
+

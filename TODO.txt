@@ -1,3 +1,5 @@
-- ISO-settings
+- After Disconnect->Reconnect a couple of time: Preview never stops but keeps running.
+- Aborting shots does not seem to reach the driver.
+- Maximum exposure time seems to be about 1s with default raspistill framerates. Needs research.
 - Binning
 - CFA property

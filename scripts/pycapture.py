@@ -10,7 +10,7 @@ class IndiClient(PyIndi.BaseClient):
     def __init__(self):
         super(IndiClient, self).__init__()
         self.exposure = None
-        self.iso = None
+        self.gain = None
         self.device = None
         self.done = False
         self.logger = logging.getLogger('PyQtIndi.IndiClient')
@@ -36,7 +36,7 @@ class IndiClient(PyIndi.BaseClient):
             elif p.getName() == "CCD_EXPOSURE":
                 self.exposure = self.device.getNumber("CCD_EXPOSURE")
             elif p.getName() == "CCD_ISO":
-                self.iso = self.device.getNumber("CCD_ISO")
+                self.gain = self.device.getNumber("CCD_GAIN")
             else:
                 print("Property : " + p.getName())
 
@@ -103,12 +103,9 @@ if __name__ == '__main__':
     connection = device.getSwitch("CONNECTION")
     connection[0].s = True
     indiclient.sendNewSwitch(connection)
-    iso = device.getSwitch("CCD_ISO")
-    assert(iso)
-    iso[0].s = False
-    iso[1].s = False
-    iso[2].s = False
-    iso[3].s = True
+    gain = device.getSwitch("CCD_GAIN")
+    assert(gain)
+    gain[0].v = 2
     indiclient.sendNewSwitch(iso)
 
     print("Taking picture")
