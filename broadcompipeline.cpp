@@ -20,7 +20,7 @@ void BroadcomPipeline::acceptByte(uint8_t byte)
             }
         }
     }
-    else if (pos < (9 + sizeof header.omx_data)) {
+    else if (pos < (signed)((9 + sizeof header.omx_data))) {
         reinterpret_cast<uint8_t *>(&header.omx_data)[pos - 9] = byte;
     }
     else if (pos >= 32768) {

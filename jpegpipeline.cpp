@@ -80,9 +80,10 @@ void JpegPipeline::acceptByte(uint8_t byte)
             return;
         }
         // If not FF00 and FFFF then we got a real segment type now.
-        // FALL THROUGH
         state = State::WANT_TYPE;
         entropy_data_follows = false;
+
+        // FALL THROUGH
 
     case State::WANT_TYPE:
         current_type = byte;

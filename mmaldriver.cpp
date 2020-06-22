@@ -136,7 +136,7 @@ bool MMALDriver::Disconnect()
  **************************************************************************************/
 const char * MMALDriver::getDefaultName()
 {
-    return "MMAL Device";
+    return "RPI Camera";
 }
 
 void MMALDriver::ISGetProperties(const char * dev)
@@ -302,7 +302,7 @@ bool MMALDriver::StartExposure(float duration)
         camera_control->get_camera()->set_shutter_speed_us(static_cast<long>(ExposureTime * 1E6F));
         camera_control->start_capture();
     }
-    catch (MMALException e)
+    catch (MMALException &e)
     {
         LOGF_ERROR("%s(%s): Caugh camera exception: %s\n", __FILE__, __func__, e.what());
         return false;
