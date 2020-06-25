@@ -1,4 +1,9 @@
 - After Disconnect->Reconnect a couple of time: Preview never stops but keeps running.
+- Upload settings under "Options" hangs.
+- WCS settings is yellow
+- Support compression.
+- Reset frame values hangs under "Image Settings".
+- Telescope primary/guide under "options" hangs.
 - Aborting shots does not seem to reach the driver.
 - Maximum exposure time seems to be about 1s with default raspistill framerates. Needs research.
 - Binning
