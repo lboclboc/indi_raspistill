@@ -1,6 +1,8 @@
 # indi_mmal
 indi-driver for mmal camera on RPi
 
+NOTE: This is just for my personal development. The real driver is named indi-rpicam and has been integrated with indi-3rdparty here: https://github.com/indilib/indi-3rdparty
+
 Just started hacking.
 
 References
